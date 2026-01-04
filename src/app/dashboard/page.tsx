@@ -173,49 +173,33 @@ export default function Dashboard() {
           )}
         </section>
 
-        <div className="mt-10 grid gap-8 lg:grid-cols-[320px,1fr]">
-          <aside className="space-y-6">
-            <SidebarCard
-              title="My Reviews"
-              description="Browse every movie you’ve stack ranked so far."
-              actionLabel="Go to My Reviews"
-              href="/my-reviews"
-            />
-            <SidebarCard
-              title="People I Follow"
-              description="See the people inspiring your feed."
-              actionLabel="Manage Following"
-              href="/following"
-            />
-          </aside>
-
-          <div className="space-y-8">
-            <section className="rounded-3xl bg-gradient-to-br from-purple-600 to-blue-600 p-8 text-white shadow-xl">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="text-sm uppercase tracking-wide text-white/80">
-                    Ready for something new?
-                  </p>
-                  <h3 className="mt-2 text-3xl font-bold">Search the Movie Library</h3>
-                  <p className="mt-2 max-w-xl text-white/80">
-                    Explore titles, log your ranking, and keep refining your stack as you watch.
-                  </p>
-                </div>
-                <Link
-                  href="/search"
-                  className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-purple-700 shadow-lg transition hover:scale-105"
-                >
-                  <Search className="h-5 w-5" />
-                  Launch search
-                </Link>
+        <div className="mt-10 space-y-8">
+          <section className="rounded-3xl bg-gradient-to-br from-purple-600 to-blue-600 p-8 text-white shadow-xl">
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-sm uppercase tracking-wide text-white/80">
+                  Ready for something new?
+                </p>
+                <h3 className="mt-2 text-3xl font-bold">Search the Movie Library</h3>
+                <p className="mt-2 max-w-xl text-white/80">
+                  Explore titles, log your ranking, and keep refining your stack as you watch.
+                </p>
               </div>
-            </section>
+              <Link
+                href="/search"
+                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-purple-700 shadow-lg transition hover:scale-105"
+              >
+                <Search className="h-5 w-5" />
+                Launch search
+              </Link>
+            </div>
+          </section>
 
-        <section>
-          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            Quick Actions
-          </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <section>
+            <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+              Quick Actions
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
                   href="/my-reviews"
                   className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
@@ -264,10 +248,8 @@ export default function Dashboard() {
                     <p className="text-sm text-white/80">Request or vote on ideas</p>
                   </div>
                 </Link>
-              </div>
-            </section>
-
-          </div>
+            </div>
+          </section>
         </div>
       </main>
       <MovieDetailModal
@@ -276,38 +258,5 @@ export default function Dashboard() {
         onClose={closeModal}
       />
     </div>
-  );
-}
-
-function SidebarCard({
-  title,
-  description,
-  actionLabel,
-  href,
-}: {
-  title: string;
-  description: string;
-  actionLabel: string;
-  href: string;
-}) {
-  return (
-    <details
-      className="group rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition dark:border-gray-800 dark:bg-gray-900"
-      open
-    >
-      <summary className="flex cursor-pointer items-center justify-between text-left text-lg font-semibold text-gray-900 transition group-open:text-purple-600 dark:text-white">
-        {title}
-        <span className="text-xs font-medium text-gray-400 group-open:text-purple-500">
-          Toggle
-        </span>
-      </summary>
-      <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">{description}</p>
-      <Link
-        href={href}
-        className="mt-4 inline-flex items-center justify-center rounded-full bg-purple-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
-      >
-        {actionLabel}
-      </Link>
-    </details>
   );
 }
