@@ -1,46 +1,36 @@
-# Movie Belli
-
-A movie discovery and tracking application.
-
-## About
-
-Movie Belli helps you discover, track, and manage your movie watchlist.
-
-## Features
-
-- Movie search and discovery
-- Personal watchlist management
-- Movie ratings and reviews
-- Detailed movie information
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-Instructions for setting up and running the project will be added here.
-
-## Technology Stack
-
-To be determined based on project requirements.
-
-## Installation
+First, run the development server:
 
 ```bash
-# Clone the repository
-git clone https://github.com/srrmntrjn/movie-belli.git
-
-# Navigate to project directory
-cd movie-belli
-
-# Further installation steps will be added
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-## Usage
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-Usage instructions will be added as the project develops.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-## Contributing
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Learn More
 
-## License
+To learn more about Next.js, take a look at the following resources:
 
-This project is open source and available under the MIT License.
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
