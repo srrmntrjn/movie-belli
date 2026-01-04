@@ -328,65 +328,70 @@ export function MovieDetailModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto max-w-[95vw] sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle className="sr-only">{movie.title}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Backdrop Image */}
-          {backdropUrl && (
-            <div className="relative -mx-6 -mt-6 h-64 overflow-hidden rounded-t-lg">
-              <Image
-                src={backdropUrl}
-                alt={movie.title}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 768px"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
-            </div>
-          )}
-
-          {/* Movie Info */}
-          <div className="flex gap-6">
-            {/* Poster */}
-            {posterUrl && (
-              <div className="relative h-48 w-32 flex-shrink-0 overflow-hidden rounded-lg">
-                <Image
-                  src={posterUrl}
-                  alt={movie.title}
-                  fill
-                  className="object-cover"
-                  sizes="128px"
-                />
-              </div>
-            )}
-
-            {/* Details */}
-            <div className="flex-1">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {movie.title}
-              </h2>
-
-              <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>{releaseYear}</span>
+        <div className="space-y-4 sm:space-y-6">
+          {/* Rating Section */}
+          {phase !== "compare" && (
+            <>
+              {/* Backdrop Image */}
+              {backdropUrl && (
+                <div className="relative -mx-4 -mt-4 h-48 overflow-hidden rounded-t-lg sm:-mx-6 sm:-mt-6 sm:h-64">
+                  <Image
+                    src={backdropUrl}
+                    alt={movie.title}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 100vw, 768px"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                 </div>
-                <div className="flex items-center gap-1">
-                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                  <span className="font-medium">{rating}</span>
-                </div>
-              </div>
-
-              {movie.overview && (
-                <p className="mt-4 text-sm text-gray-700 dark:text-gray-300">
-                  {movie.overview}
-                </p>
               )}
-            </div>
-          </div>
+
+              {/* Movie Info */}
+              <div className="flex gap-3 sm:gap-6">
+                {/* Poster */}
+                {posterUrl && (
+                  <div className="relative h-32 w-24 flex-shrink-0 overflow-hidden rounded-lg sm:h-48 sm:w-32">
+                    <Image
+                      src={posterUrl}
+                      alt={movie.title}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 96px, 128px"
+                    />
+                  </div>
+                )}
+
+                {/* Details */}
+                <div className="flex-1 min-w-0">
+                  <h2 className="text-xl font-bold text-gray-900 dark:text-white sm:text-2xl">
+                    {movie.title}
+                  </h2>
+
+                  <div className="mt-2 flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400 sm:gap-4">
+                    <div className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>{releaseYear}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-medium">{rating}</span>
+                    </div>
+                  </div>
+
+                  {movie.overview && (
+                    <p className="mt-3 text-sm text-gray-700 line-clamp-4 dark:text-gray-300 sm:mt-4 sm:line-clamp-none">
+                      {movie.overview}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Rating Section */}
           <div className="border-t pt-6">

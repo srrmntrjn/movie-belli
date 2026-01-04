@@ -154,47 +154,47 @@ export function BinarySearchRanking({
     : null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Which do you prefer header */}
-      <h3 className="text-center text-2xl font-bold text-gray-900 dark:text-white">
+      <h3 className="text-center text-lg font-bold text-gray-900 dark:text-white sm:text-2xl">
         Which do you prefer?
       </h3>
 
       {/* Side by side comparison cards */}
-      <div className="relative flex items-stretch gap-4">
+      <div className="relative flex items-stretch gap-2 sm:gap-4">
         {/* New movie card */}
         <button
           type="button"
           onClick={() => handleDecision("better")}
-          className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-gray-300 bg-white p-8 transition-all hover:border-purple-500 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-400"
+          className="group flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-gray-300 bg-white p-3 transition-all hover:border-purple-500 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-400 sm:rounded-3xl sm:p-6"
         >
-          <div className="relative mb-4 h-48 w-32 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+          <div className="relative mb-2 h-32 w-20 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 sm:mb-3 sm:h-48 sm:w-32">
             {movie.poster_path ? (
               <Image
                 src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
                 alt={movie.title}
                 fill
                 className="object-cover"
-                sizes="128px"
+                sizes="(max-width: 640px) 80px, 128px"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+              <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">
                 No Image
               </div>
             )}
           </div>
-          <h4 className="text-center text-xl font-bold text-gray-900 dark:text-white">
+          <h4 className="line-clamp-2 text-center text-sm font-bold text-gray-900 dark:text-white sm:text-xl">
             {movie.title}
           </h4>
           {movieYear && (
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400 sm:mt-1 sm:text-sm">
               {movieYear}
             </p>
           )}
         </button>
 
         {/* OR badge */}
-        <div className="absolute left-1/2 top-1/2 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gray-800 text-sm font-bold text-white shadow-lg dark:bg-gray-600">
+        <div className="absolute left-1/2 top-1/2 z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gray-800 text-xs font-bold text-white shadow-lg dark:bg-gray-600 sm:h-14 sm:w-14 sm:text-sm">
           OR
         </div>
 
@@ -202,28 +202,28 @@ export function BinarySearchRanking({
         <button
           type="button"
           onClick={() => handleDecision("worse")}
-          className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-gray-300 bg-white p-8 transition-all hover:border-purple-500 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-400"
+          className="group flex flex-1 flex-col items-center justify-center rounded-2xl border-2 border-gray-300 bg-white p-3 transition-all hover:border-purple-500 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-400 sm:rounded-3xl sm:p-6"
         >
-          <div className="relative mb-4 h-48 w-32 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+          <div className="relative mb-2 h-32 w-20 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700 sm:mb-3 sm:h-48 sm:w-32">
             {candidate.posterPath ? (
               <Image
                 src={`https://image.tmdb.org/t/p/w342${candidate.posterPath}`}
                 alt={candidate.title ?? "Movie"}
                 fill
                 className="object-cover"
-                sizes="128px"
+                sizes="(max-width: 640px) 80px, 128px"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+              <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">
                 No Image
               </div>
             )}
           </div>
-          <h4 className="text-center text-xl font-bold text-gray-900 dark:text-white">
+          <h4 className="line-clamp-2 text-center text-sm font-bold text-gray-900 dark:text-white sm:text-xl">
             {candidate.title ?? "Untitled"}
           </h4>
           {candidateYear && (
-            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+            <p className="mt-0.5 text-xs text-gray-600 dark:text-gray-400 sm:mt-1 sm:text-sm">
               {candidateYear}
             </p>
           )}
@@ -231,26 +231,26 @@ export function BinarySearchRanking({
       </div>
 
       {/* Bottom action buttons */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-1 sm:gap-4">
         <button
           type="button"
           onClick={onCancel}
-          className="flex items-center gap-2 rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="flex items-center gap-1 rounded-full border border-gray-300 px-2 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 sm:gap-2 sm:px-6 sm:py-3 sm:text-sm"
         >
-          <ArrowLeftRight className="h-4 w-4" />
-          Undo
+          <ArrowLeftRight className="h-3 w-3 sm:h-4 sm:w-4" />
+          <span className="hidden sm:inline">Undo</span>
         </button>
         <button
           type="button"
           onClick={() => handleDecision("similar")}
-          className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="rounded-full border border-gray-300 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 sm:px-6 sm:py-3 sm:text-sm"
         >
           Too tough
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+          className="rounded-full border border-gray-300 px-2.5 py-1.5 text-xs font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800 sm:px-6 sm:py-3 sm:text-sm"
         >
           Skip →
         </button>

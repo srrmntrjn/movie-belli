@@ -33,8 +33,8 @@ export const authOptions = {
     }),
   ],
   logger: {
-    error(code, metadata) {
-      console.error(`[auth][error][${code}]`, metadata);
+    error(error) {
+      console.error(`[auth][error]`, error);
     },
     warn(code) {
       console.warn(`[auth][warn][${code}]`);
