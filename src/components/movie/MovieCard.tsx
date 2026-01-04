@@ -1,13 +1,32 @@
 import Image from "next/image";
+import type { ReactNode } from "react";
 import { Star, Calendar } from "lucide-react";
 import { Movie } from "@/lib/tmdb";
+
+interface MovieCardAction {
+  label: string;
+  onClick: (movie: Movie) => void;
+  disabled?: boolean;
+  icon?: ReactNode;
+  variant?: "primary" | "secondary" | "danger";
+}
 
 interface MovieCardProps {
   movie: Movie;
   onSelect?: (movie: Movie) => void;
+  action?: MovieCardAction;
 }
 
-export function MovieCard({ movie, onSelect }: MovieCardProps) {
+const ACTION_STYLES: Record<NonNullable<MovieCardAction["variant"]>, string> = {
+  primary:
+    "bg-purple-600 text-white hover:bg-purple-700 focus-visible:ring-purple-500",
+  secondary:
+    "bg-gray-100 text-gray-700 hover:bg-gray-200 focus-visible:ring-gray-400 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600",
+  danger:
+    "bg-red-100 text-red-700 hover:bg-red-200 focus-visible:ring-red-400 dark:bg-red-900/30 dark:text-red-200 dark:hover:bg-red-900/50",
+};
+
+export function MovieCard({ movie, onSelect, action }: MovieCardProps) {
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : "/placeholder-movie.png";
@@ -65,6 +84,21 @@ export function MovieCard({ movie, onSelect }: MovieCardProps) {
           <p className="mt-2 line-clamp-3 text-sm text-gray-600 dark:text-gray-400">
             {movie.overview}
           </p>
+        )}
+
+        {action && (
+          <button
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation();
+              action.onClick(movie);
+            }}
+            disabled={action.disabled}
+            className={`mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full px-3 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 ${ACTION_STYLES[action.variant ?? "primary"]}`}
+          >
+            {action.icon}
+            <span>{action.label}</span>
+          </button>
         )}
       </div>
     </div>

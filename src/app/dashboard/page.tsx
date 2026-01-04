@@ -3,7 +3,18 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Film, LogOut, User, Mail, Star, Users, Loader2, Lightbulb, Search } from "lucide-react";
+import {
+  Film,
+  LogOut,
+  User,
+  Mail,
+  Star,
+  Users,
+  Loader2,
+  Lightbulb,
+  Search,
+  Bookmark,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ActivityFeedItem, type ActivityFeedEntry } from "@/components/feed/ActivityFeedItem";
@@ -160,6 +171,12 @@ export default function Dashboard() {
               href="/my-reviews"
             />
             <SidebarCard
+              title="My Watchlist"
+              description="Keep track of the movies you want to watch next."
+              actionLabel="View Watchlist"
+              href="/watchlist"
+            />
+            <SidebarCard
               title="People I Follow"
               description="See the people inspiring your feed."
               actionLabel="Manage Following"
@@ -204,6 +221,18 @@ export default function Dashboard() {
                   <div>
                     <h4 className="font-semibold">My Reviews</h4>
                     <p className="text-sm text-white/80">View your ranked movies</p>
+                  </div>
+                </Link>
+                <Link
+                  href="/watchlist"
+                  className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                >
+                  <div className="rounded-full bg-white/20 p-3">
+                    <Bookmark className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold">Watchlist</h4>
+                    <p className="text-sm text-white/80">See what to watch next</p>
                   </div>
                 </Link>
                 <Link

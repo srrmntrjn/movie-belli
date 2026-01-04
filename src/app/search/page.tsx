@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Search, Loader2, Check, Plus } from "lucide-react";
 import { MovieCard } from "@/components/movie/MovieCard";
 import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
 import { Movie } from "@/lib/tmdb";
 
 export default function SearchPage() {
+  const { status } = useSession();
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
@@ -14,6 +16,11 @@ export default function SearchPage() {
   const [totalResults, setTotalResults] = useState(0);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [watchlistIds, setWatchlistIds] = useState<number[]>([]);
+  const [watchlistError, setWatchlistError] = useState<string | null>(null);
+  const [watchlistPendingId, setWatchlistPendingId] = useState<number | null>(
+    null
+  );
 
   useEffect(() => {
     // Debounce search
@@ -28,6 +35,27 @@ export default function SearchPage() {
 
     return () => clearTimeout(timer);
   }, [query]);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      void fetchWatchlistIds();
+    } else {
+      setWatchlistIds([]);
+    }
+  }, [status]);
+
+  const fetchWatchlistIds = async () => {
+    try {
+      const response = await fetch("/api/watchlist?mode=ids");
+      if (!response.ok) {
+        throw new Error("Failed to load watchlist");
+      }
+      const data = await response.json();
+      setWatchlistIds(data.ids || []);
+    } catch (err) {
+      console.error("Failed to load watchlist:", err);
+    }
+  };
 
   const searchMovies = async (searchQuery: string) => {
     setLoading(true);
@@ -61,6 +89,47 @@ export default function SearchPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedMovie(null);
+  };
+
+  const handleAddToWatchlist = async (movie: Movie) => {
+    if (watchlistPendingId) return;
+    setWatchlistError(null);
+    setWatchlistPendingId(movie.id);
+    try {
+      const response = await fetch("/api/watchlist", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          tmdbId: movie.id,
+          movie: {
+            title: movie.title,
+            poster_path: movie.poster_path,
+            release_date: movie.release_date,
+          },
+        }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(
+          data.error ||
+            (response.status === 401
+              ? "Please sign in to save your watchlist."
+              : "Unable to add to watchlist.")
+        );
+      }
+      setWatchlistIds((prev) =>
+        prev.includes(movie.id) ? prev : [...prev, movie.id]
+      );
+    } catch (err) {
+      console.error("Failed to add to watchlist:", err);
+      setWatchlistError(
+        err instanceof Error ? err.message : "Unable to add to watchlist."
+      );
+    } finally {
+      setWatchlistPendingId(null);
+    }
   };
 
   return (
@@ -109,6 +178,12 @@ export default function SearchPage() {
           </div>
         )}
 
+        {watchlistError && (
+          <div className="mb-8 rounded-lg bg-amber-50 p-4 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
+            {watchlistError}
+          </div>
+        )}
+
         {/* Loading State */}
         {loading && (
           <div className="flex items-center justify-center py-12">
@@ -124,6 +199,26 @@ export default function SearchPage() {
                 key={movie.id}
                 movie={movie}
                 onSelect={handleMovieClick}
+                action={{
+                  label: watchlistIds.includes(movie.id)
+                    ? "In watchlist"
+                    : "Add to watchlist",
+                  onClick: handleAddToWatchlist,
+                  disabled:
+                    watchlistPendingId === movie.id ||
+                    watchlistIds.includes(movie.id),
+                  icon:
+                    watchlistPendingId === movie.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : watchlistIds.includes(movie.id) ? (
+                      <Check className="h-4 w-4" />
+                    ) : (
+                      <Plus className="h-4 w-4" />
+                    ),
+                  variant: watchlistIds.includes(movie.id)
+                    ? "secondary"
+                    : "primary",
+                }}
               />
             ))}
           </div>
