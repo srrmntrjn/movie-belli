@@ -2,7 +2,7 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Film,
   LogOut,
@@ -67,12 +67,72 @@ export default function Dashboard() {
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [quickActionsOpen, setQuickActionsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const searchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
     }
   }, [status, router]);
+
+  // Search movies as user types
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchMovies(searchQuery);
+      } else {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
+    }, 300); // 300ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const searchMovies = async (query: string) => {
+    setSearchLoading(true);
+    try {
+      const response = await fetch(
+        `/api/movies/search?query=${encodeURIComponent(query)}`
+      );
+      if (!response.ok) throw new Error("Failed to search");
+      const data = await response.json();
+      setSearchResults(data.results.slice(0, 6)); // Show top 6 results
+      setShowSearchDropdown(true);
+    } catch (error) {
+      console.error("Search error:", error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Close dropdown when clicking outside or pressing Escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+        setShowSearchDropdown(false);
+      }
+    };
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowSearchDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleEscapeKey);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, []);
 
   useEffect(() => {
     if (status !== "authenticated") {
@@ -176,6 +236,76 @@ export default function Dashboard() {
 
       {/* Main Content */}
       <main className="px-2 py-6 sm:px-4">
+        <div className="mx-auto mb-10 max-w-3xl px-2 sm:px-4">
+          <div ref={searchRef} className="relative">
+            <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for movies and tv shows"
+              className="w-full rounded-full border border-gray-300 bg-white py-4 pl-12 pr-4 text-lg shadow-lg transition-all focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:placeholder-gray-400"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchQuery.trim()) {
+                  router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+                }
+              }}
+            />
+            {searchLoading && (
+              <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-purple-600 border-t-transparent" />
+              </div>
+            )}
+
+            {/* Search Results Dropdown */}
+            {showSearchDropdown && searchResults.length > 0 && (
+              <div className="absolute top-full mt-2 w-full rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-gray-700 dark:bg-gray-800">
+                <div className="max-h-96 overflow-y-auto">
+                  {searchResults.map((movie) => (
+                    <button
+                      key={movie.id}
+                      onClick={() => {
+                        setSelectedMovie(movie);
+                        setIsModalOpen(true);
+                        setShowSearchDropdown(false);
+                        setSearchQuery("");
+                      }}
+                      className="flex w-full items-center gap-3 border-b border-gray-100 p-3 text-left transition hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
+                    >
+                      <img
+                        src={movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : '/placeholder-movie.png'}
+                        alt={movie.title}
+                        className="h-16 w-12 rounded object-cover"
+                      />
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          {movie.title}
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                          {movie.release_date ? new Date(movie.release_date).getFullYear() : 'N/A'}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        {movie.vote_average ? movie.vote_average.toFixed(1) : 'N/A'}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
+                    setShowSearchDropdown(false);
+                  }}
+                  className="w-full border-t border-gray-200 p-4 text-center text-sm font-semibold text-purple-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-purple-400 dark:hover:bg-gray-700"
+                >
+                  Show all results
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
         <section className="space-y-4">
           <div className="flex flex-col gap-2 px-2 sm:flex-row sm:items-end sm:justify-between sm:px-4">
             <div>
@@ -229,26 +359,6 @@ export default function Dashboard() {
         </section>
 
         <div className="mt-10 space-y-8 px-2 sm:px-4">
-          <section className="rounded-3xl bg-gradient-to-br from-purple-600 to-blue-600 p-8 text-white shadow-xl">
-            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-              <div>
-                <p className="text-sm uppercase tracking-wide text-white/80">
-                  Ready for something new?
-                </p>
-                <h3 className="mt-2 text-3xl font-bold">Search the Movie Library</h3>
-                <p className="mt-2 max-w-xl text-white/80">
-                  Explore titles, log your ranking, and keep refining your stack as you watch.
-                </p>
-              </div>
-              <Link
-                href="/search"
-                className="inline-flex items-center gap-2 rounded-full bg-white px-6 py-3 text-purple-700 shadow-lg transition hover:scale-105"
-              >
-                <Search className="h-5 w-5" />
-                Launch search
-              </Link>
-            </div>
-          </section>
 
           <section className="md:hidden">
             <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">

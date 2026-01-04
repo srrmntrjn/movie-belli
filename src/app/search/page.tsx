@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Loader2 } from "lucide-react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Search, Loader2, ArrowLeft } from "lucide-react";
 import { MovieCard } from "@/components/movie/MovieCard";
 import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
 import { Movie } from "@/lib/tmdb";
 
 export default function SearchPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(false);
@@ -14,6 +17,14 @@ export default function SearchPage() {
   const [totalResults, setTotalResults] = useState(0);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Initialize query from URL parameter
+  useEffect(() => {
+    const urlQuery = searchParams.get('q');
+    if (urlQuery) {
+      setQuery(urlQuery);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     // Debounce search
@@ -68,6 +79,13 @@ export default function SearchPage() {
       <div className="mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <div className="mb-8">
+          <button
+            onClick={() => router.back()}
+            className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md transition-all hover:bg-gray-50 hover:shadow-lg dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white">
             Search Movies
           </h1>
