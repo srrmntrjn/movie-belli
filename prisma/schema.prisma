@@ -122,6 +122,7 @@ model Rating {
   cachedTitle String?
   cachedPosterPath String?
   cachedReleaseDate String?
+  movieCategory String?
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   review Review?

@@ -2,12 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { isMovieCategory, type MovieCategory } from "@/lib/movieCategories";
 
 type RatingCategory = "bad" | "ok" | "great";
 
 interface RateRequestBody {
   tmdbId: number;
   category: RatingCategory;
+  movieCategory: MovieCategory;
   movie: {
     title: string;
     poster_path?: string | null;
@@ -114,10 +116,18 @@ export async function POST(request: NextRequest) {
     const body: RateRequestBody = await request.json();
     const category = body.category;
     const tmdbId = Number(body.tmdbId);
+    const movieCategory = body.movieCategory;
 
     if (!category || !CATEGORY_VALUE[category]) {
       return NextResponse.json(
         { error: "Invalid rating category" },
+        { status: 400 }
+      );
+    }
+
+    if (!movieCategory || !isMovieCategory(movieCategory)) {
+      return NextResponse.json(
+        { error: "Movie category is required" },
         { status: 400 }
       );
     }
@@ -195,6 +205,7 @@ export async function POST(request: NextRequest) {
         cachedTitle: body.movie.title,
         cachedPosterPath: body.movie.poster_path ?? null,
         cachedReleaseDate: body.movie.release_date ?? null,
+        movieCategory,
       },
       create: {
         userId: user.id,
@@ -204,6 +215,7 @@ export async function POST(request: NextRequest) {
         cachedTitle: body.movie.title,
         cachedPosterPath: body.movie.poster_path ?? null,
         cachedReleaseDate: body.movie.release_date ?? null,
+        movieCategory,
       },
     });
 
@@ -215,6 +227,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           rating: numericRating,
           category,
+          movieCategory,
         },
       },
     });

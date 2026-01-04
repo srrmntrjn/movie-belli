@@ -19,6 +19,10 @@ import {
   type OrderedRating,
   type RatingCategory,
 } from "@/components/ranking/BinarySearchRanking";
+import {
+  MOVIE_CATEGORIES,
+  type MovieCategory,
+} from "@/lib/movieCategories";
 
 interface MovieDetailModalProps {
   movie: Movie | null;
@@ -71,6 +75,8 @@ export function MovieDetailModal({
   const [rankingState, setRankingState] = useState<RankingStatePayload | null>(null);
   const [initialRankingData, setInitialRankingData] = useState<RankingMovie[]>([]);
   const [pendingCategory, setPendingCategory] = useState<RatingCategory | null>(null);
+  const [selectedMovieCategory, setSelectedMovieCategory] =
+    useState<MovieCategory | null>(null);
   const [comparisonList, setComparisonList] = useState<OrderedRating[]>([]);
   const [orderedCache, setOrderedCache] = useState<OrderedRating[] | null>(null);
   const [rankingLoading, setRankingLoading] = useState(false);
@@ -84,6 +90,7 @@ export function MovieDetailModal({
     setRankingState(null);
     setInitialRankingData([]);
     setPendingCategory(null);
+    setSelectedMovieCategory(null);
     setComparisonList([]);
     setOrderedCache(null);
     setRankingLoading(false);
@@ -163,6 +170,10 @@ export function MovieDetailModal({
       placement?: { beforeId: string | null; afterId: string | null }
     ) => {
       if (!movie) return;
+      if (!selectedMovieCategory) {
+        setActionError("Select a movie category before rating.");
+        return;
+      }
       setSelectedRating(category);
       setSaving(true);
       setSaved(false);
@@ -177,6 +188,7 @@ export function MovieDetailModal({
           body: JSON.stringify({
             tmdbId: movie.id,
             category,
+            movieCategory: selectedMovieCategory,
             movie: {
               title: movie.title,
               poster_path: movie.poster_path,
@@ -219,7 +231,7 @@ export function MovieDetailModal({
         setSaving(false);
       }
     },
-    [movie, onClose, resetState]
+    [movie, onClose, resetState, selectedMovieCategory]
   );
 
   const startComparison = useCallback(
@@ -286,6 +298,10 @@ export function MovieDetailModal({
 
   const handleRate = async (category: RatingCategory) => {
     if (!movie) return;
+    if (!selectedMovieCategory) {
+      setActionError("Select a movie category before rating.");
+      return;
+    }
     setPendingCategory(category);
     setActionError(null);
 
@@ -400,6 +416,38 @@ export function MovieDetailModal({
               </div>
             )}
 
+            <div className="mb-6">
+              <h4 className="text-sm font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-300">
+                Choose a category
+              </h4>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                Required before you can rate this movie.
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {MOVIE_CATEGORIES.map((category) => {
+                  const isSelected = selectedMovieCategory === category.id;
+                  return (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedMovieCategory(category.id);
+                        setActionError(null);
+                      }}
+                      className={`rounded-full border px-4 py-2 text-sm font-medium transition ${
+                        isSelected
+                          ? "border-gray-900 bg-gray-900 text-white dark:border-white dark:bg-white dark:text-gray-900"
+                          : "border-gray-300 bg-white text-gray-700 hover:border-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200"
+                      }`}
+                      disabled={saving}
+                    >
+                      {category.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             {saved ? (
               <div className="flex items-center justify-center gap-2 rounded-lg bg-green-50 py-6 text-green-700 dark:bg-green-900/20 dark:text-green-400">
                 <ThumbsUp className="h-5 w-5" />
@@ -439,12 +487,12 @@ export function MovieDetailModal({
                       <button
                         key={category}
                         onClick={() => handleRate(category)}
-                        disabled={saving}
+                        disabled={saving || !selectedMovieCategory}
                         className={`flex flex-col items-center gap-3 rounded-lg p-6 text-white transition-all ${
                           config.color
                         } ${
                           isSelected ? "scale-105 shadow-lg" : "shadow"
-                        } disabled:opacity-50`}
+                        } disabled:cursor-not-allowed disabled:opacity-50`}
                       >
                         {saving && isSelected ? (
                           <Loader2 className="h-8 w-8 animate-spin" />
