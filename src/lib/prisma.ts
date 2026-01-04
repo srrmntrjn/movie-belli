@@ -4,7 +4,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-// Prisma 7.2.0 reads DATABASE_URL from environment automatically
+// Prisma reads DATABASE_URL from environment automatically
 // Ensure we use DIRECT_URL if available (without pooler), otherwise clean DATABASE_URL
 const setupDatabaseUrl = () => {
   const directUrl = process.env.DIRECT_URL;
