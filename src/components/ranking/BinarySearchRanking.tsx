@@ -31,6 +31,18 @@ const categoryLabel: Record<RatingCategory, string> = {
   great: "Great",
 };
 
+const describeRating = (value: number) => {
+  if (Number.isInteger(value) && value >= 1 && value <= 3) {
+    if (value === 1) return "Bad";
+    if (value === 2) return "Ok";
+    return "Great";
+  }
+
+  if (value < 4) return "Bad";
+  if (value <= 7) return "Ok";
+  return "Great";
+};
+
 const computeInitialIndex = (category: RatingCategory, total: number) => {
   if (total <= 0) {
     return 0;
@@ -196,7 +208,7 @@ export function BinarySearchRanking({
             </p>
             <p className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
               <Star className="h-4 w-4 text-yellow-400" />
-              <span>{candidate.rating === 3 ? "Great" : candidate.rating === 2 ? "Ok" : "Bad"}</span>
+              <span>{describeRating(candidate.rating)}</span>
             </p>
           </div>
         </div>

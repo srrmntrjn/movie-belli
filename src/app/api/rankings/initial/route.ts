@@ -8,6 +8,16 @@ const computePosition = (index: number, total: number) => {
   return new Prisma.Decimal(index + 1).dividedBy(denominator);
 };
 
+const positionToRating = (position: Prisma.Decimal) => {
+  const scaled = position.mul(10);
+  const clamped = scaled.lessThan(0)
+    ? new Prisma.Decimal(0)
+    : scaled.greaterThan(10)
+      ? new Prisma.Decimal(10)
+      : scaled;
+  return Number(clamped.toFixed(2));
+};
+
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
@@ -64,7 +74,7 @@ export async function POST(request: NextRequest) {
         const position = computePosition(index, finalOrder.length);
         return prisma.rating.update({
           where: { id },
-          data: { position },
+          data: { position, rating: positionToRating(position) },
         });
       }),
       prisma.user.update({

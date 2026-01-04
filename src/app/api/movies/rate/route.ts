@@ -39,6 +39,16 @@ const normalizePosition = (index: number, total: number) => {
   return new Prisma.Decimal(index + 1).dividedBy(denominator);
 };
 
+const positionToRating = (position: Prisma.Decimal) => {
+  const scaled = position.mul(10);
+  const clamped = scaled.lessThan(0)
+    ? new Prisma.Decimal(0)
+    : scaled.greaterThan(10)
+      ? new Prisma.Decimal(10)
+      : scaled;
+  return Number(clamped.toFixed(2));
+};
+
 async function rebalancePositions(userId: string) {
   const ratings = await prisma.rating.findMany({
     where: { userId },
@@ -54,12 +64,13 @@ async function rebalancePositions(userId: string) {
   }
 
   await prisma.$transaction(
-    ratings.map((rating, index) =>
-      prisma.rating.update({
+    ratings.map((rating, index) => {
+      const position = normalizePosition(index, ratings.length);
+      return prisma.rating.update({
         where: { id: rating.id },
-        data: { position: normalizePosition(index, ratings.length) },
-      })
-    )
+        data: { position, rating: positionToRating(position) },
+      });
+    })
   );
 }
 
@@ -155,9 +166,11 @@ export async function POST(request: NextRequest) {
     }
 
     let position: Prisma.Decimal;
+    let numericRating: number;
 
     if (totalRatings < 10) {
       position = DEFAULT_POSITIONS[category];
+      numericRating = CATEGORY_VALUE[category];
     } else {
       if (!body.placement) {
         return NextResponse.json(
@@ -166,9 +179,8 @@ export async function POST(request: NextRequest) {
         );
       }
       position = await resolvePlacementPosition(user.id, body.placement);
+      numericRating = positionToRating(position);
     }
-
-    const numericRating = CATEGORY_VALUE[category];
 
     const savedRating = await prisma.rating.upsert({
       where: {

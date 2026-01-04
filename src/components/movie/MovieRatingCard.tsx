@@ -18,8 +18,14 @@ interface MovieRatingCardProps {
 
 // Map rating values to categories
 const getRatingCategory = (rating: number) => {
-  if (rating <= 2) return "bad";
-  if (rating <= 3.5) return "ok";
+  if (Number.isInteger(rating) && rating >= 1 && rating <= 3) {
+    if (rating === 1) return "bad";
+    if (rating === 2) return "ok";
+    return "great";
+  }
+
+  if (rating < 4) return "bad";
+  if (rating <= 7) return "ok";
   return "great";
 };
 

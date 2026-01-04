@@ -98,10 +98,10 @@ export function ActivityFeedItem({
         </p>
 
         <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-          {rating && (
+          {rating !== null && (
             <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              {rating.toFixed(1)}
+              {rating.toFixed(2)}
             </span>
           )}
           {entry.type === "REVIEWED_MOVIE" && (
