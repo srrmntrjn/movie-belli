@@ -36,6 +36,10 @@ model User {
 
   // Activity
   activities Activity[]
+
+  // Follows (one-directional)
+  following Follow[] @relation("UserFollows")
+  followers Follow[] @relation("UserFollowers")
 }
 
 // NextAuth.js required models
@@ -224,4 +228,19 @@ enum ActivityType {
   REVIEWED_MOVIE
   CREATED_LIST
   ADDED_FRIEND
+}
+
+// Follow System (one-directional)
+model Follow {
+  id          String   @id @default(cuid())
+  followerId  String   // User who follows
+  followingId String   // User being followed
+  createdAt   DateTime @default(now())
+
+  follower  User @relation("UserFollows", fields: [followerId], references: [id], onDelete: Cascade)
+  following User @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
 }

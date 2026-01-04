@@ -2,20 +2,54 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { Film, LogOut, User, Mail, CheckCircle, Search, Star } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Film, LogOut, User, Mail, CheckCircle, Search, Star, Users, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { UserCard } from "@/components/user/UserCard";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
       router.push("/");
     }
   }, [status, router]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchQuery.trim()) {
+        searchUsers(searchQuery);
+      } else {
+        setSearchResults([]);
+      }
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  const searchUsers = async (query: string) => {
+    setSearchLoading(true);
+    try {
+      const response = await fetch(
+        `/api/users/search?q=${encodeURIComponent(query)}`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setSearchResults(data.users || []);
+      }
+    } catch (error) {
+      console.error("Error searching users:", error);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
 
   if (status === "loading") {
     return (
@@ -123,6 +157,66 @@ export default function Dashboard() {
                 <p className="text-sm text-white/80">View your rated movies</p>
               </div>
             </Link>
+          </div>
+        </div>
+
+        {/* User Search */}
+        <div className="mt-8">
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+            Find Users
+          </h3>
+          <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
+            {/* Search Input */}
+            <div className="relative mb-4">
+              <Users className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by name or username..."
+                className="w-full rounded-full border border-gray-300 bg-white py-3 pl-12 pr-4 text-base shadow transition-all focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+              />
+              {searchLoading && (
+                <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-purple-600" />
+              )}
+            </div>
+
+            {/* Search Results */}
+            {searchQuery && (
+              <div className="space-y-2">
+                {searchLoading && searchResults.length === 0 ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                  </div>
+                ) : searchResults.length > 0 ? (
+                  <>
+                    <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                      Found {searchResults.length} user{searchResults.length !== 1 ? "s" : ""}
+                    </p>
+                    <div className="space-y-2">
+                      {searchResults.map((user) => (
+                        <UserCard
+                          key={user.id}
+                          user={user}
+                          showFollowButton={false}
+                        />
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                    No users found matching "{searchQuery}"
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Initial State */}
+            {!searchQuery && (
+              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                Search for users by name or username
+              </div>
+            )}
           </div>
         </div>
 
