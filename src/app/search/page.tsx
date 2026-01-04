@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { MovieCard } from "@/components/movie/MovieCard";
+import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
 import { Movie } from "@/lib/tmdb";
 
 export default function SearchPage() {
@@ -11,6 +12,8 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [totalResults, setTotalResults] = useState(0);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     // Debounce search
@@ -48,6 +51,16 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleMovieClick = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedMovie(null);
   };
 
   return (
@@ -107,10 +120,21 @@ export default function SearchPage() {
         {!loading && movies.length > 0 && (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {movies.map((movie) => (
-              <MovieCard key={movie.id} movie={movie} />
+              <MovieCard
+                key={movie.id}
+                movie={movie}
+                onSelect={handleMovieClick}
+              />
             ))}
           </div>
         )}
+
+        {/* Movie Detail Modal */}
+        <MovieDetailModal
+          movie={selectedMovie}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
 
         {/* Empty State */}
         {!loading && !error && query && movies.length === 0 && (

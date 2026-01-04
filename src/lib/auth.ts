@@ -1,3 +1,4 @@
+import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
@@ -45,3 +46,6 @@ export const authOptions = {
   trustHost: true, // Required for Vercel deployments
   secret: process.env.NEXTAUTH_SECRET, // Explicitly set secret
 } satisfies NextAuthConfig;
+
+// Initialize NextAuth
+export const { handlers, auth, signIn, signOut } = NextAuth(authOptions);
