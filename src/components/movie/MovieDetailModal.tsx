@@ -75,22 +75,6 @@ export function MovieDetailModal({
   const [orderedCache, setOrderedCache] = useState<OrderedRating[] | null>(null);
   const [rankingLoading, setRankingLoading] = useState(false);
 
-  if (!movie) return null;
-
-  const posterUrl = movie.poster_path
-    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
-    : null;
-
-  const backdropUrl = movie.backdrop_path
-    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
-    : null;
-
-  const releaseYear = movie.release_date
-    ? new Date(movie.release_date).getFullYear()
-    : "N/A";
-
-  const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
-
   const resetState = useCallback(() => {
     setSelectedRating(null);
     setSaving(false);
@@ -323,6 +307,24 @@ export function MovieDetailModal({
 
     await startComparison(category, state.totalRatings);
   };
+
+  if (!movie) {
+    return null;
+  }
+
+  const posterUrl = movie.poster_path
+    ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+    : null;
+
+  const backdropUrl = movie.backdrop_path
+    ? `https://image.tmdb.org/t/p/w1280${movie.backdrop_path}`
+    : null;
+
+  const releaseYear = movie.release_date
+    ? new Date(movie.release_date).getFullYear()
+    : "N/A";
+
+  const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
