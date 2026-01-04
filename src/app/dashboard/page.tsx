@@ -3,11 +3,60 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Film, LogOut, Star, Users, Loader2, Lightbulb, Search } from "lucide-react";
+import {
+  Film,
+  LogOut,
+  Star,
+  Users,
+  Lightbulb,
+  Search,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { ActivityFeedItem, type ActivityFeedEntry } from "@/components/feed/ActivityFeedItem";
 import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
 import type { Movie } from "@/lib/tmdb";
+
+type QuickAction = {
+  label: string;
+  description: string;
+  href: string;
+  icon: LucideIcon;
+  accent: string;
+};
+
+const QUICK_ACTIONS: QuickAction[] = [
+  {
+    label: "My Reviews",
+    description: "View your ranked movies",
+    href: "/my-reviews",
+    icon: Star,
+    accent: "from-pink-500 to-purple-600",
+  },
+  {
+    label: "Following",
+    description: "Manage people you follow",
+    href: "/following",
+    icon: Users,
+    accent: "from-indigo-500 to-sky-500",
+  },
+  {
+    label: "Find People",
+    description: "Search the community",
+    href: "/people",
+    icon: Search,
+    accent: "from-blue-500 to-cyan-500",
+  },
+  {
+    label: "Feedback Board",
+    description: "Request or vote on ideas",
+    href: "/feedback",
+    icon: Lightbulb,
+    accent: "from-amber-500 to-orange-500",
+  },
+];
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -17,6 +66,7 @@ export default function Dashboard() {
   const [feedError, setFeedError] = useState<string | null>(null);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -88,6 +138,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
+      <QuickActionsDrawer
+        actions={QUICK_ACTIONS}
+        isOpen={quickActionsOpen}
+        onToggle={() => setQuickActionsOpen((prev) => !prev)}
+      />
       {/* Header */}
       <header className="border-b border-gray-200 bg-white/60 backdrop-blur-sm dark:border-gray-800/60">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
@@ -120,19 +175,19 @@ export default function Dashboard() {
       </header>
 
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 py-12">
-        <section className="rounded-3xl bg-white p-6 shadow-xl dark:bg-gray-900">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+      <main className="px-2 py-6 sm:px-4">
+        <section className="space-y-4">
+          <div className="flex flex-col gap-2 px-2 sm:flex-row sm:items-end sm:justify-between sm:px-4">
             <div>
-              <p className="text-sm uppercase tracking-wide text-purple-600 dark:text-purple-300">
+              <p className="text-xs uppercase tracking-wide text-purple-600 dark:text-purple-300">
                 Live from your circle
               </p>
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                Recent Activity from People You Follow
+                Recent activity
               </h2>
             </div>
             <p className="text-sm text-gray-600 dark:text-gray-400">
-              Stay up to date with new reviews and rankings.
+              Stack ranking updates from the people you follow.
             </p>
           </div>
           {feedLoading ? (
@@ -140,16 +195,16 @@ export default function Dashboard() {
               {[...Array(3)].map((_, index) => (
                 <div
                   key={index}
-                  className="h-24 animate-pulse rounded-2xl bg-white/60 dark:bg-gray-800/60"
+                  className="h-24 w-full animate-pulse rounded-2xl bg-white/60 dark:bg-gray-800/60"
                 />
               ))}
             </div>
           ) : feedError ? (
-            <div className="rounded-2xl bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-300">
+            <div className="w-full rounded-2xl bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-300">
               {feedError}
             </div>
           ) : feedItems.length === 0 ? (
-            <div className="rounded-2xl bg-purple-50 p-8 text-center shadow-inner dark:bg-purple-900/20">
+            <div className="w-full rounded-2xl bg-purple-50 p-6 text-center shadow-inner dark:bg-purple-900/20">
               <p className="text-gray-600 dark:text-gray-300">
                 Follow users to see their activity here.
               </p>
@@ -173,7 +228,7 @@ export default function Dashboard() {
           )}
         </section>
 
-        <div className="mt-10 space-y-8">
+        <div className="mt-10 space-y-8 px-2 sm:px-4">
           <section className="rounded-3xl bg-gradient-to-br from-purple-600 to-blue-600 p-8 text-white shadow-xl">
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
@@ -195,59 +250,29 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <section>
+          <section className="md:hidden">
             <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
               Quick Actions
             </h3>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Link
-                  href="/my-reviews"
-                  className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                >
-                  <div className="rounded-full bg-white/20 p-3">
-                    <Star className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">My Reviews</h4>
-                    <p className="text-sm text-white/80">View your ranked movies</p>
-                  </div>
-                </Link>
-                <Link
-                  href="/following"
-                  className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                >
-                  <div className="rounded-full bg-white/20 p-3">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Following</h4>
-                    <p className="text-sm text-white/80">Manage people you follow</p>
-                  </div>
-                </Link>
-                <Link
-                  href="/people"
-                  className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-500 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                >
-                  <div className="rounded-full bg-white/20 p-3">
-                    <Users className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Find People</h4>
-                    <p className="text-sm text-white/80">Search the community</p>
-                  </div>
-                </Link>
-                <Link
-                  href="/feedback"
-                  className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
-                >
-                  <div className="rounded-full bg-white/20 p-3">
-                    <Lightbulb className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold">Feedback Board</h4>
-                    <p className="text-sm text-white/80">Request or vote on ideas</p>
-                  </div>
-                </Link>
+              {QUICK_ACTIONS.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className={`flex items-center gap-4 rounded-xl bg-gradient-to-r ${action.accent} p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl`}
+                  >
+                    <div className="rounded-full bg-white/20 p-3">
+                      <Icon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <h4 className="font-semibold">{action.label}</h4>
+                      <p className="text-sm text-white/80">{action.description}</p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
           </section>
         </div>
@@ -257,6 +282,65 @@ export default function Dashboard() {
         isOpen={isModalOpen}
         onClose={closeModal}
       />
+    </div>
+  );
+}
+
+function QuickActionsDrawer({
+  actions,
+  isOpen,
+  onToggle,
+}: {
+  actions: QuickAction[];
+  isOpen: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <div className="fixed left-4 top-1/3 z-40 hidden md:block">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex h-14 w-14 items-center justify-center rounded-full bg-purple-600 text-white shadow-2xl transition hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 dark:hover:bg-purple-500 dark:focus:ring-purple-800"
+          aria-expanded={isOpen}
+          aria-label="Toggle quick actions"
+        >
+          {isOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+        </button>
+        <div
+          className={`absolute left-16 top-1/2 w-72 -translate-y-1/2 transform transition-all duration-300 ${
+            isOpen ? "translate-x-0 opacity-100" : "-translate-x-6 opacity-0 pointer-events-none"
+          }`}
+        >
+          <div className="rounded-3xl border border-purple-200/70 bg-white/90 p-5 shadow-2xl backdrop-blur dark:border-purple-900/40 dark:bg-gray-900/90">
+            <p className="text-xs font-semibold uppercase tracking-wide text-purple-600 dark:text-purple-300">
+              Quick Actions
+            </p>
+            <nav className="mt-4 space-y-2">
+              {actions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <Link
+                    key={action.href}
+                    href={action.href}
+                    className="flex items-center gap-3 rounded-2xl border border-gray-100 bg-white/80 p-3 text-left text-sm font-medium text-gray-900 shadow-sm transition hover:translate-x-1 hover:border-purple-200 hover:bg-purple-50 dark:border-gray-800/70 dark:bg-gray-900/80 dark:text-gray-100 dark:hover:border-purple-700 dark:hover:bg-gray-800"
+                  >
+                    <div className={`rounded-2xl bg-gradient-to-br ${action.accent} p-2 text-white`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1">
+                      <p>{action.label}</p>
+                      <p className="text-xs font-normal text-gray-500 dark:text-gray-400">
+                        {action.description}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

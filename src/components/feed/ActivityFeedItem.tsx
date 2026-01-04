@@ -48,7 +48,7 @@ export function ActivityFeedItem({
   const profileIdentifier = entry.user.username || entry.user.id;
 
   return (
-    <div className="flex items-center gap-4 rounded-2xl bg-white p-4 shadow-md transition hover:shadow-lg dark:bg-gray-800">
+    <div className="flex w-full items-center gap-4 rounded-2xl bg-white p-4 shadow-md transition hover:shadow-lg dark:bg-gray-800">
       <button
         type="button"
         onClick={() => onSelectMovie?.(entry.movie)}

@@ -5,21 +5,23 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 // Prisma reads DATABASE_URL from environment automatically
-// Ensure we use DIRECT_URL if available (without pooler), otherwise clean DATABASE_URL
+// Prefer a true direct connection if one exists, otherwise keep whatever URL was provided
 const setupDatabaseUrl = () => {
   const directUrl = process.env.DIRECT_URL;
-  const databaseUrl = process.env.DATABASE_URL?.replace(/[?&]pgbouncer=true/g, "") || "";
-  
-  // If DIRECT_URL doesn't have pooler, use it for DATABASE_URL
+  const databaseUrl = process.env.DATABASE_URL;
+
+  // Prefer non-pooled direct connections for Prisma (better for prepared statements)
   if (directUrl && !directUrl.includes("pooler")) {
     process.env.DATABASE_URL = directUrl;
     return;
   }
-  
-  // Otherwise use cleaned DATABASE_URL
-  if (databaseUrl && databaseUrl !== process.env.DATABASE_URL) {
-    process.env.DATABASE_URL = databaseUrl;
+
+  if (!databaseUrl) {
+    throw new Error("DATABASE_URL is required for Prisma");
   }
+
+  // Leave pooled URLs (with ?pgbouncer=true) untouched so Prisma can disable prepared statements itself
+  process.env.DATABASE_URL = databaseUrl;
 };
 
 // Set up DATABASE_URL before PrismaClient initialization
