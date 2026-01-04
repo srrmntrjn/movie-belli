@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import {
   Dialog,
@@ -10,6 +10,15 @@ import {
 } from "@/components/ui/dialog";
 import { Movie } from "@/lib/tmdb";
 import { Calendar, Star, ThumbsDown, Meh, ThumbsUp, Loader2 } from "lucide-react";
+import {
+  InitialRankingList,
+  type RankingMovie,
+} from "@/components/ranking/InitialRankingList";
+import {
+  BinarySearchRanking,
+  type OrderedRating,
+  type RatingCategory,
+} from "@/components/ranking/BinarySearchRanking";
 
 interface MovieDetailModalProps {
   movie: Movie | null;
@@ -17,7 +26,11 @@ interface MovieDetailModalProps {
   onClose: () => void;
 }
 
-type RatingCategory = "bad" | "ok" | "great";
+interface RankingStatePayload {
+  totalRatings: number;
+  needsInitialRanking: boolean;
+  initialRatings?: RankingMovie[];
+}
 
 const RATING_CONFIG = {
   bad: {
@@ -53,6 +66,14 @@ export function MovieDetailModal({
   );
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [phase, setPhase] = useState<"rate" | "initial" | "compare">("rate");
+  const [rankingState, setRankingState] = useState<RankingStatePayload | null>(null);
+  const [initialRankingData, setInitialRankingData] = useState<RankingMovie[]>([]);
+  const [pendingCategory, setPendingCategory] = useState<RatingCategory | null>(null);
+  const [comparisonList, setComparisonList] = useState<OrderedRating[]>([]);
+  const [orderedCache, setOrderedCache] = useState<OrderedRating[] | null>(null);
+  const [rankingLoading, setRankingLoading] = useState(false);
 
   if (!movie) return null;
 
@@ -70,40 +91,237 @@ export function MovieDetailModal({
 
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
 
-  const handleRate = async (category: RatingCategory) => {
-    setSelectedRating(category);
-    setSaving(true);
+  const resetState = useCallback(() => {
+    setSelectedRating(null);
+    setSaving(false);
     setSaved(false);
+    setActionError(null);
+    setPhase("rate");
+    setRankingState(null);
+    setInitialRankingData([]);
+    setPendingCategory(null);
+    setComparisonList([]);
+    setOrderedCache(null);
+    setRankingLoading(false);
+  }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      resetState();
+    }
+  }, [isOpen, resetState]);
+
+  const fetchRankingState = useCallback(async () => {
     try {
-      const response = await fetch("/api/movies/rate", {
+      const response = await fetch("/api/rankings/state");
+      const payload = (await response.json()) as
+        | RankingStatePayload
+        | { error?: string };
+      if (!response.ok) {
+        throw new Error(
+          "error" in payload && payload.error
+            ? payload.error
+            : "Failed to load ranking state"
+        );
+      }
+      const data = payload as RankingStatePayload;
+      setRankingState(data);
+      if (data.initialRatings) {
+        setInitialRankingData(data.initialRatings);
+      }
+      return data;
+    } catch (error) {
+      console.error("Failed to fetch ranking state:", error);
+      setActionError(
+        error instanceof Error ? error.message : "Unable to load ranking state"
+      );
+      return null;
+    }
+  }, []);
+
+  const fetchOrderedRatings = useCallback(async () => {
+    try {
+      const response = await fetch("/api/rankings/ordered");
+      const payload = await response.json();
+      if (!response.ok) {
+        throw new Error(payload.error || "Unable to load rankings");
+      }
+      const formatted: OrderedRating[] = (payload.ratings || []).map(
+        (rating: any) => ({
+          id: rating.id,
+          tmdbId: rating.tmdbId,
+          title: rating.title,
+          posterPath: rating.posterPath,
+          releaseDate: rating.releaseDate,
+          rating: rating.rating,
+          position:
+            rating.position !== null && rating.position !== undefined
+              ? Number(rating.position)
+              : null,
+        })
+      );
+      setOrderedCache(formatted);
+      return formatted;
+    } catch (error) {
+      console.error("Failed to fetch ordered rankings:", error);
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load comparison data"
+      );
+      return null;
+    }
+  }, []);
+
+  const submitRating = useCallback(
+    async (
+      category: RatingCategory,
+      placement?: { beforeId: string | null; afterId: string | null }
+    ) => {
+      if (!movie) return;
+      setSelectedRating(category);
+      setSaving(true);
+      setSaved(false);
+      setActionError(null);
+
+      try {
+        const response = await fetch("/api/movies/rate", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            tmdbId: movie.id,
+            category,
+            movie: {
+              title: movie.title,
+              poster_path: movie.poster_path,
+              release_date: movie.release_date,
+            },
+            placement,
+          }),
+        });
+
+        const data = await response.json().catch(() => ({}));
+
+        if (!response.ok) {
+          throw new Error(data.error || "Failed to save rating");
+        }
+
+        setSaved(true);
+        setPhase("rate");
+        setComparisonList([]);
+        setPendingCategory(null);
+        setOrderedCache(null);
+        setRankingState((prev) =>
+          prev
+            ? {
+                ...prev,
+                totalRatings: prev.totalRatings + 1,
+              }
+            : prev
+        );
+
+        setTimeout(() => {
+          onClose();
+          resetState();
+        }, 1200);
+      } catch (error) {
+        console.error("Error saving rating:", error);
+        setActionError(
+          error instanceof Error ? error.message : "Failed to save rating"
+        );
+      } finally {
+        setSaving(false);
+      }
+    },
+    [movie, onClose, resetState]
+  );
+
+  const startComparison = useCallback(
+    async (category: RatingCategory, totalRatings: number) => {
+      if (!movie) return;
+      if (totalRatings < 10) {
+        await submitRating(category);
+        return;
+      }
+      const ordered = orderedCache ?? (await fetchOrderedRatings());
+      if (!ordered) {
+        return;
+      }
+      const filtered = ordered.filter((rating) => rating.tmdbId !== movie.id);
+      if (filtered.length === 0) {
+        await submitRating(category);
+        return;
+      }
+      setComparisonList(filtered);
+      setPhase("compare");
+    },
+    [fetchOrderedRatings, movie, orderedCache, submitRating]
+  );
+
+  const handleComparisonComplete = useCallback(
+    async (placement: { beforeId: string | null; afterId: string | null }) => {
+      if (!pendingCategory) return;
+      await submitRating(pendingCategory, placement);
+    },
+    [pendingCategory, submitRating]
+  );
+
+  const handleInitialRankingSubmit = async (orderedIds: string[]) => {
+    setRankingLoading(true);
+    setActionError(null);
+    try {
+      const response = await fetch("/api/rankings/initial", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          tmdbId: movie.id,
-          rating: RATING_CONFIG[category].value,
-          category,
-        }),
+        body: JSON.stringify({ orderedIds }),
       });
-
+      const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
-        throw new Error("Failed to save rating");
+        throw new Error(payload.error || "Failed to save ranking order");
       }
-
-      setSaved(true);
-      setTimeout(() => {
-        onClose();
-        setSaved(false);
-        setSelectedRating(null);
-      }, 1500);
+      const updatedState = await fetchRankingState();
+      setPhase("rate");
+      if (pendingCategory && updatedState && !updatedState.needsInitialRanking) {
+        await startComparison(pendingCategory, updatedState.totalRatings);
+      }
     } catch (error) {
-      console.error("Error saving rating:", error);
-      alert("Failed to save rating. Please try again.");
+      console.error("Failed to complete initial ranking:", error);
+      setActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to save ranking order"
+      );
     } finally {
-      setSaving(false);
+      setRankingLoading(false);
     }
+  };
+
+  const handleRate = async (category: RatingCategory) => {
+    if (!movie) return;
+    setPendingCategory(category);
+    setActionError(null);
+
+    const state = rankingState ?? (await fetchRankingState());
+    if (!state) return;
+
+    if (state.needsInitialRanking) {
+      setPhase("initial");
+      if (state.initialRatings) {
+        setInitialRankingData(state.initialRatings);
+      }
+      return;
+    }
+
+    if (state.totalRatings < 10) {
+      await submitRating(category);
+      return;
+    }
+
+    await startComparison(category, state.totalRatings);
   };
 
   return (
@@ -174,11 +392,39 @@ export function MovieDetailModal({
               How would you rate this movie?
             </h3>
 
+            {actionError && (
+              <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/20 dark:text-red-300">
+                {actionError}
+              </div>
+            )}
+
             {saved ? (
               <div className="flex items-center justify-center gap-2 rounded-lg bg-green-50 py-6 text-green-700 dark:bg-green-900/20 dark:text-green-400">
                 <ThumbsUp className="h-5 w-5" />
                 <span className="font-medium">Rating saved!</span>
               </div>
+            ) : phase === "initial" ? (
+              <InitialRankingList
+                movies={initialRankingData}
+                onSubmit={handleInitialRankingSubmit}
+                onCancel={() => {
+                  setPhase("rate");
+                  setPendingCategory(null);
+                }}
+                submitting={rankingLoading}
+              />
+            ) : phase === "compare" ? (
+              <BinarySearchRanking
+                movie={movie}
+                category={pendingCategory ?? "ok"}
+                ratings={comparisonList}
+                onComplete={handleComparisonComplete}
+                onCancel={() => {
+                  setPhase("rate");
+                  setComparisonList([]);
+                  setPendingCategory(null);
+                }}
+              />
             ) : (
               <div className="grid grid-cols-3 gap-4">
                 {(Object.keys(RATING_CONFIG) as RatingCategory[]).map(

@@ -20,6 +20,7 @@ model User {
   bio           String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  initialStackRanked Boolean @default(false)
 
   // Relations
   accounts      Account[]
@@ -115,6 +116,10 @@ model Rating {
   rating    Float // 0.5 to 5.0 (half-star increments)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  position  Decimal? @db.Decimal(65, 30)
+  cachedTitle String?
+  cachedPosterPath String?
+  cachedReleaseDate String?
 
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   review Review?
