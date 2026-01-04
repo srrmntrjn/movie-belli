@@ -211,11 +211,11 @@ export default function Dashboard() {
               </div>
             </section>
 
-            <section>
-              <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-                Quick Actions
-              </h3>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section>
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+            Quick Actions
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <Link
                   href="/my-reviews"
                   className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
