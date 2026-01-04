@@ -12,7 +12,7 @@ const requiredEnvVars = {
 };
 
 const missingVars = Object.entries(requiredEnvVars)
-  .filter(([_, value]) => !value)
+  .filter(([, value]) => !value)
   .map(([key]) => key);
 
 if (missingVars.length > 0 && process.env.NODE_ENV === "production") {
@@ -31,7 +31,7 @@ export const authOptions = {
     session: async ({ session, user }) => {
       if (session?.user) {
         session.user.id = user.id;
-        // @ts-ignore - Add custom user fields
+        // @ts-expect-error - Add custom user fields
         session.user.username = user.username;
       }
       return session;

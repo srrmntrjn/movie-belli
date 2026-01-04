@@ -53,7 +53,24 @@ export async function GET(request: NextRequest) {
       ],
     });
 
-    return NextResponse.json({ users });
+    const userIds = users.map((user) => user.id);
+
+    const follows = await prisma.follow.findMany({
+      where: {
+        followerId: session.user.id,
+        followingId: { in: userIds },
+      },
+      select: { followingId: true },
+    });
+
+    const followingSet = new Set(follows.map((follow) => follow.followingId));
+
+    const usersWithFollowState = users.map((user) => ({
+      ...user,
+      isFollowing: followingSet.has(user.id),
+    }));
+
+    return NextResponse.json({ users: usersWithFollowState });
   } catch (error) {
     console.error("Error searching users:", error);
     return NextResponse.json(

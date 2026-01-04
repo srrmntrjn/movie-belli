@@ -157,7 +157,7 @@ export default function SearchPage() {
               Start searching
             </h3>
             <p className="mt-2 text-gray-600 dark:text-gray-400">
-              Enter a movie title to find what you're looking for
+              Enter a movie title to find what you&apos;re looking for
             </p>
           </div>
         )}

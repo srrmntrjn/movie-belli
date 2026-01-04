@@ -1,6 +1,9 @@
+'use client';
+
 import Image from "next/image";
 import Link from "next/link";
 import { User as UserIcon } from "lucide-react";
+import { FollowButton } from "@/components/user/FollowButton";
 
 interface UserCardProps {
   user: {
@@ -12,7 +15,7 @@ interface UserCardProps {
   };
   showFollowButton?: boolean;
   isFollowing?: boolean;
-  onFollowToggle?: (userId: string) => void;
+  onFollowToggle?: (userId: string, isFollowing: boolean) => void;
 }
 
 export function UserCard({
@@ -64,19 +67,14 @@ export function UserCard({
         </div>
       </Link>
 
-      {/* Follow Button (placeholder for now) */}
+      {/* Follow Button */}
       {showFollowButton && (
-        <button
-          onClick={() => onFollowToggle?.(user.id)}
-          className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-            isFollowing
-              ? "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              : "bg-purple-600 text-white hover:bg-purple-700"
-          }`}
-        >
-          {isFollowing ? "Following" : "Follow"}
-        </button>
+        <FollowButton
+          userId={user.id}
+          initialFollowing={isFollowing}
+          onFollowChange={(nextState) => onFollowToggle?.(user.id, nextState)}
+        />
       )}
-    </div>
-  );
-}
+	    </div>
+	  );
+	}

@@ -1,9 +1,9 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tmdb } from "@/lib/tmdb";
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get the session
     const session = await auth();

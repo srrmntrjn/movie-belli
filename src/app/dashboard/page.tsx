@@ -8,11 +8,20 @@ import Image from "next/image";
 import Link from "next/link";
 import { UserCard } from "@/components/user/UserCard";
 
+interface SearchResultUser {
+  id: string;
+  name: string;
+  username?: string | null;
+  image?: string | null;
+  bio?: string | null;
+  isFollowing: boolean;
+}
+
 export default function Dashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<SearchResultUser[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
   useEffect(() => {
@@ -42,13 +51,31 @@ export default function Dashboard() {
       );
       if (response.ok) {
         const data = await response.json();
-        setSearchResults(data.users || []);
+        const usersWithStatus: SearchResultUser[] = (data.users || []).map(
+          (
+            user: Omit<SearchResultUser, "isFollowing"> & {
+              isFollowing?: boolean;
+            }
+          ) => ({
+            ...user,
+            isFollowing: Boolean(user.isFollowing),
+          })
+        );
+        setSearchResults(usersWithStatus);
       }
     } catch (error) {
       console.error("Error searching users:", error);
     } finally {
       setSearchLoading(false);
     }
+  };
+
+  const handleFollowToggle = (userId: string, following: boolean) => {
+    setSearchResults((prev) =>
+      prev.map((user) =>
+        user.id === userId ? { ...user, isFollowing: following } : user
+      )
+    );
   };
 
   if (status === "loading") {
@@ -157,6 +184,18 @@ export default function Dashboard() {
                 <p className="text-sm text-white/80">View your rated movies</p>
               </div>
             </Link>
+            <Link
+              href="/following"
+              className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-indigo-600 to-sky-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <div className="rounded-full bg-white/20 p-3">
+                <Users className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-semibold">Following</h4>
+                <p className="text-sm text-white/80">Manage people you follow</p>
+              </div>
+            </Link>
           </div>
         </div>
 
@@ -198,14 +237,16 @@ export default function Dashboard() {
                         <UserCard
                           key={user.id}
                           user={user}
-                          showFollowButton={false}
+                          showFollowButton
+                          isFollowing={user.isFollowing}
+                          onFollowToggle={handleFollowToggle}
                         />
                       ))}
                     </div>
                   </>
                 ) : (
                   <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                    No users found matching "{searchQuery}"
+                    No users found matching &ldquo;{searchQuery}&rdquo;
                   </div>
                 )}
               </div>
