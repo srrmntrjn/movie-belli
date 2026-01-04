@@ -22,7 +22,7 @@ export default function Home() {
           <Film className="h-16 w-16 text-white" />
         </div>
         <h1 className="text-4xl font-bold tracking-tight text-gray-900 dark:text-white">
-          Movie Belli
+          tivi
         </h1>
         <p className="max-w-md text-base text-gray-600 dark:text-gray-300">
           Sign in to start tracking, ranking, and sharing the movies you love.

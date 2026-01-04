@@ -17,7 +17,7 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "Movie Belli - Track, Share, and Discover Movies",
+  title: "tivi - Track, Share, and Discover Movies",
   description: "Track your watchlist, share reviews with friends, and discover your next favorite movie",
 };
 

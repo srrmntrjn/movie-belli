@@ -108,7 +108,7 @@ export default function PeoplePage() {
 
           {query.trim().length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">
-              Start typing to discover people on Movie Belli.
+              Start typing to discover people on tivi.
             </div>
           ) : results.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-300 p-8 text-center text-gray-500 dark:border-gray-700 dark:text-gray-400">

@@ -70,23 +70,13 @@ export function ActivityFeedItem({
       </button>
 
       <div className="flex-1">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+        <p className="text-base text-gray-700 dark:text-gray-200">
           <Link
             href={`/users/${profileIdentifier}`}
             className="font-semibold text-gray-900 transition hover:text-purple-600 dark:text-white dark:hover:text-purple-400"
           >
-            {entry.user.name || "Movie Belli user"}
-          </Link>
-          {entry.user.username && (
-            <span className="text-gray-400">@{entry.user.username}</span>
-          )}
-          <span>•</span>
-          <span>{formattedTimestamp}</span>
-        </div>
-        <p className="mt-1 text-base text-gray-700 dark:text-gray-200">
-          <span className="font-medium text-gray-900 dark:text-white">
-            {entry.user.name || "User"}
-          </span>{" "}
+            {entry.user.name || "tivi user"}
+          </Link>{" "}
           {actionLabel}{" "}
           <button
             type="button"
@@ -97,7 +87,7 @@ export function ActivityFeedItem({
           </button>
         </p>
 
-        <div className="mt-2 flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-2 flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
           {rating !== null && (
             <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-yellow-700 dark:bg-yellow-500/10 dark:text-yellow-300">
               <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
@@ -110,6 +100,8 @@ export function ActivityFeedItem({
               Review posted
             </span>
           )}
+          <span>•</span>
+          <span>{formattedTimestamp}</span>
         </div>
       </div>
     </div>

@@ -81,7 +81,7 @@ export default function SearchPage() {
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="mb-4 inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-md transition-all hover:bg-gray-50 hover:shadow-lg dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 shadow-md backdrop-blur-sm transition-all hover:bg-white hover:shadow-lg dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800"
           >
             <ArrowLeft className="h-4 w-4" />
             Back

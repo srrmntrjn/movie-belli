@@ -5,7 +5,7 @@ import { tmdb } from "@/lib/tmdb";
 
 const FEED_LIMIT = 10;
 type SupportedActivityType = "RATED_MOVIE" | "REVIEWED_MOVIE";
-const SUPPORTED_ACTIVITY_TYPES: SupportedActivityType[] = [
+const SUPPORTED_ACtiviTY_TYPES: SupportedActivityType[] = [
   "RATED_MOVIE",
   "REVIEWED_MOVIE",
 ];
@@ -35,7 +35,7 @@ export async function GET() {
     const activities = await prisma.activity.findMany({
       where: {
         userId: { in: followedIds },
-        type: { in: [...SUPPORTED_ACTIVITY_TYPES] },
+        type: { in: [...SUPPORTED_ACtiviTY_TYPES] },
       },
       include: {
         user: {

@@ -146,105 +146,115 @@ export function BinarySearchRanking({
     setCurrentIndex(Math.floor((nextLow + nextHigh) / 2));
   };
 
-  return (
-    <div className="space-y-4 rounded-2xl bg-white p-6 shadow dark:bg-gray-900">
-      <div className="flex items-start gap-4">
-        <div className="relative h-32 w-24 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-800">
-          {movie.poster_path ? (
-            <Image
-              src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
-              alt={movie.title}
-              fill
-              className="object-cover"
-              sizes="96px"
-            />
-          ) : (
-            <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
-              No Image
-            </div>
-          )}
-        </div>
-        <div>
-          <p className="text-sm font-semibold text-purple-600 dark:text-purple-300">
-            {categoryLabel[category]} rating flow
-          </p>
-          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {movie.title}
-          </h3>
-          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-            Help us find the right spot by comparing against movies you&apos;ve already
-            reviewed.
-          </p>
-        </div>
-      </div>
+  const movieYear = movie.release_date
+    ? new Date(movie.release_date).getFullYear()
+    : null;
+  const candidateYear = candidate.releaseDate
+    ? new Date(candidate.releaseDate).getFullYear()
+    : null;
 
-      <div className="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
-        <div className="mb-4 flex items-center gap-3 text-gray-500 dark:text-gray-400">
-          <ArrowLeftRight className="h-5 w-5" />
-          <span>
-            Is <strong>{movie.title}</strong> better or worse than
-            <strong> {candidate.title ?? "this movie"}</strong>?
-          </span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="relative h-24 w-16 overflow-hidden rounded-md bg-gray-200 dark:bg-gray-700">
-            {candidate.posterPath ? (
+  return (
+    <div className="space-y-6">
+      {/* Which do you prefer header */}
+      <h3 className="text-center text-2xl font-bold text-gray-900 dark:text-white">
+        Which do you prefer?
+      </h3>
+
+      {/* Side by side comparison cards */}
+      <div className="relative flex items-stretch gap-4">
+        {/* New movie card */}
+        <button
+          type="button"
+          onClick={() => handleDecision("better")}
+          className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-gray-300 bg-white p-8 transition-all hover:border-purple-500 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-400"
+        >
+          <div className="relative mb-4 h-48 w-32 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+            {movie.poster_path ? (
               <Image
-                src={`https://image.tmdb.org/t/p/w154${candidate.posterPath}`}
-                alt={candidate.title ?? "Movie"}
+                src={`https://image.tmdb.org/t/p/w342${movie.poster_path}`}
+                alt={movie.title}
                 fill
                 className="object-cover"
-                sizes="64px"
+                sizes="128px"
               />
             ) : (
-              <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">
+              <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
                 No Image
               </div>
             )}
           </div>
-          <div>
-            <p className="text-lg font-semibold text-gray-900 dark:text-white">
-              {candidate.title ?? "Untitled movie"}
+          <h4 className="text-center text-xl font-bold text-gray-900 dark:text-white">
+            {movie.title}
+          </h4>
+          {movieYear && (
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              {movieYear}
             </p>
-            <p className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-              <Star className="h-4 w-4 text-yellow-400" />
-              <span>{describeRating(candidate.rating)}</span>
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap gap-3">
-        <button
-          type="button"
-          onClick={() => handleDecision("better")}
-          className="flex-1 rounded-full bg-green-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-green-700"
-        >
-          Better
+          )}
         </button>
+
+        {/* OR badge */}
+        <div className="absolute left-1/2 top-1/2 z-10 flex h-14 w-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-gray-800 text-sm font-bold text-white shadow-lg dark:bg-gray-600">
+          OR
+        </div>
+
+        {/* Comparison movie card */}
         <button
           type="button"
           onClick={() => handleDecision("worse")}
-          className="flex-1 rounded-full bg-red-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-red-700"
+          className="group flex flex-1 flex-col items-center justify-center rounded-3xl border-2 border-gray-300 bg-white p-8 transition-all hover:border-purple-500 hover:shadow-xl dark:border-gray-700 dark:bg-gray-800 dark:hover:border-purple-400"
         >
-          Worse
+          <div className="relative mb-4 h-48 w-32 overflow-hidden rounded-lg bg-gray-200 dark:bg-gray-700">
+            {candidate.posterPath ? (
+              <Image
+                src={`https://image.tmdb.org/t/p/w342${candidate.posterPath}`}
+                alt={candidate.title ?? "Movie"}
+                fill
+                className="object-cover"
+                sizes="128px"
+              />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">
+                No Image
+              </div>
+            )}
+          </div>
+          <h4 className="text-center text-xl font-bold text-gray-900 dark:text-white">
+            {candidate.title ?? "Untitled"}
+          </h4>
+          {candidateYear && (
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+              {candidateYear}
+            </p>
+          )}
+        </button>
+      </div>
+
+      {/* Bottom action buttons */}
+      <div className="flex items-center justify-between gap-4">
+        <button
+          type="button"
+          onClick={onCancel}
+          className="flex items-center gap-2 rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          <ArrowLeftRight className="h-4 w-4" />
+          Undo
         </button>
         <button
           type="button"
           onClick={() => handleDecision("similar")}
-          className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-800"
+          className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
         >
-          Similar
+          Too tough
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="rounded-full border border-gray-300 px-6 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-800"
+        >
+          Skip →
         </button>
       </div>
-
-      <button
-        type="button"
-        onClick={onCancel}
-        className="w-full rounded-full border border-gray-200 px-4 py-2 text-sm font-semibold text-gray-600 transition hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800"
-      >
-        Cancel
-      </button>
     </div>
   );
 }
