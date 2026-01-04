@@ -2,9 +2,23 @@ import Image from "next/image";
 import { Star, Calendar } from "lucide-react";
 import { Movie } from "@/lib/tmdb";
 
+type FollowedReviewSummary = {
+  count: number;
+  reviewers: Array<{
+    id: string;
+    name: string | null;
+    username: string | null;
+    image: string | null;
+  }>;
+};
+
+type MovieCardMovie = Movie & {
+  followedReviews?: FollowedReviewSummary;
+};
+
 interface MovieCardProps {
-  movie: Movie;
-  onSelect?: (movie: Movie) => void;
+  movie: MovieCardMovie;
+  onSelect?: (movie: MovieCardMovie) => void;
 }
 
 export function MovieCard({ movie, onSelect }: MovieCardProps) {
@@ -17,6 +31,14 @@ export function MovieCard({ movie, onSelect }: MovieCardProps) {
     : "N/A";
 
   const rating = movie.vote_average ? movie.vote_average.toFixed(1) : "N/A";
+  const followedReviews = movie.followedReviews;
+  const reviewerNames =
+    followedReviews?.reviewers.map(
+      (reviewer) => reviewer.name || reviewer.username || "Someone"
+    ) ?? [];
+  const remainingReviewerCount = followedReviews
+    ? Math.max(followedReviews.count - reviewerNames.length, 0)
+    : 0;
 
   return (
     <div
@@ -65,6 +87,45 @@ export function MovieCard({ movie, onSelect }: MovieCardProps) {
           <p className="mt-2 line-clamp-3 text-sm text-gray-600 dark:text-gray-400">
             {movie.overview}
           </p>
+        )}
+
+        {followedReviews && followedReviews.count > 0 && (
+          <div className="mt-3 flex items-center gap-2">
+            <div className="flex -space-x-2">
+              {followedReviews.reviewers.map((reviewer) => {
+                const initial = (reviewer.name || reviewer.username || "?")
+                  .trim()
+                  .charAt(0)
+                  .toUpperCase();
+                return (
+                  <div
+                    key={reviewer.id}
+                    className="relative flex h-6 w-6 items-center justify-center overflow-hidden rounded-full border-2 border-white bg-gray-200 text-[10px] font-semibold text-gray-600 dark:border-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                  >
+                    {reviewer.image ? (
+                      <Image
+                        src={reviewer.image}
+                        alt={reviewer.name || reviewer.username || "Reviewer"}
+                        fill
+                        className="object-cover"
+                        sizes="24px"
+                      />
+                    ) : (
+                      initial
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+            <p className="text-xs font-medium text-purple-700 dark:text-purple-300">
+              Reviewed by {reviewerNames.join(", ")}
+              {remainingReviewerCount > 0
+                ? ` and ${remainingReviewerCount} other${
+                    remainingReviewerCount > 1 ? "s" : ""
+                  }`
+                : ""}
+            </p>
+          </div>
         )}
       </div>
     </div>
