@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Film, LogOut, User, Mail, CheckCircle, Search } from "lucide-react";
+import { Film, LogOut, User, Mail, CheckCircle, Search, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -109,6 +109,18 @@ export default function Dashboard() {
               <div>
                 <h4 className="font-semibold">Search Movies</h4>
                 <p className="text-sm text-white/80">Find your next watch</p>
+              </div>
+            </Link>
+            <Link
+              href="/my-reviews"
+              className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <div className="rounded-full bg-white/20 p-3">
+                <Star className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-semibold">My Reviews</h4>
+                <p className="text-sm text-white/80">View your rated movies</p>
               </div>
             </Link>
           </div>
