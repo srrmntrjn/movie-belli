@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Loader2 } from "lucide-react";
 import { MovieCard } from "@/components/movie/MovieCard";
-import { tmdb, Movie } from "@/lib/tmdb";
+import { Movie } from "@/lib/tmdb";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
@@ -31,9 +31,17 @@ export default function SearchPage() {
     setError(null);
 
     try {
-      const response = await tmdb.searchMovies(searchQuery);
-      setMovies(response.results);
-      setTotalResults(response.total_results);
+      const response = await fetch(
+        `/api/movies/search?query=${encodeURIComponent(searchQuery)}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch movies");
+      }
+
+      const data = await response.json();
+      setMovies(data.results);
+      setTotalResults(data.total_results);
     } catch (err) {
       setError("Failed to search movies. Please try again.");
       console.error("Search error:", err);
