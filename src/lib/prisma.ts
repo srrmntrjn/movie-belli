@@ -25,10 +25,20 @@ const setupDatabaseUrl = () => {
 // Set up DATABASE_URL before PrismaClient initialization
 setupDatabaseUrl();
 
-export const prisma =
-  globalForPrisma.prisma ??
-  new PrismaClient({
-    log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
-  });
+// Initialize Prisma Client with error handling
+let prisma: PrismaClient;
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+if (process.env.NODE_ENV === "production") {
+  prisma = globalForPrisma.prisma ?? new PrismaClient({
+    log: ["error"],
+  });
+} else {
+  if (!globalForPrisma.prisma) {
+    globalForPrisma.prisma = new PrismaClient({
+      log: ["query", "error", "warn"],
+    });
+  }
+  prisma = globalForPrisma.prisma;
+}
+
+export { prisma };

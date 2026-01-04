@@ -7,8 +7,8 @@ export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     }),
   ],
   callbacks: {
@@ -28,4 +28,5 @@ export const authOptions = {
     strategy: "database" as const,
   },
   trustHost: true, // Required for Vercel deployments
+  secret: process.env.NEXTAUTH_SECRET, // Explicitly set secret
 } satisfies NextAuthConfig;
