@@ -1,7 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import { Film, LogOut } from "lucide-react";
+import { Film, LogOut, Search } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -36,12 +36,19 @@ export default function Home() {
                 {session.user?.email}
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex flex-wrap justify-center gap-3">
               <Link
                 href="/dashboard"
                 className="rounded-full bg-purple-600 px-8 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-purple-700 hover:shadow-xl"
               >
                 Go to Dashboard
+              </Link>
+              <Link
+                href="/search"
+                className="flex items-center gap-2 rounded-full bg-blue-600 px-8 py-3 text-base font-medium text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl"
+              >
+                <Search className="h-4 w-4" />
+                Search Movies
               </Link>
               <button
                 onClick={() => signOut()}

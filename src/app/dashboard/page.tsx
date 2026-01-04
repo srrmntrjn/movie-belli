@@ -3,8 +3,9 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Film, LogOut, User, Mail, CheckCircle } from "lucide-react";
+import { Film, LogOut, User, Mail, CheckCircle, Search } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -89,6 +90,27 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="mt-8">
+          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+            Quick Actions
+          </h3>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <Link
+              href="/search"
+              className="flex items-center gap-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 p-6 text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+            >
+              <div className="rounded-full bg-white/20 p-3">
+                <Search className="h-6 w-6" />
+              </div>
+              <div>
+                <h4 className="font-semibold">Search Movies</h4>
+                <p className="text-sm text-white/80">Find your next watch</p>
+              </div>
+            </Link>
           </div>
         </div>
 
