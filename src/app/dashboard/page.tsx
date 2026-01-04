@@ -3,7 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Film, LogOut, User, Mail, CheckCircle, Search, Star, Users, Loader2 } from "lucide-react";
+import { Film, LogOut, User, Mail, Search, Star, Users, Loader2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { UserCard } from "@/components/user/UserCard";
@@ -257,210 +257,125 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* User Search */}
-        <div className="mt-8">
-          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            Find Users
-          </h3>
-          <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-            {/* Search Input */}
-            <div className="relative mb-4">
-              <Users className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name or username..."
-                className="w-full rounded-full border border-gray-300 bg-white py-3 pl-12 pr-4 text-base shadow transition-all focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-              />
-              {searchLoading && (
-                <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-purple-600" />
-              )}
-            </div>
-
-            {/* Search Results */}
-            {searchQuery && (
-              <div className="space-y-2">
-                {searchLoading && searchResults.length === 0 ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
-                  </div>
-                ) : searchResults.length > 0 ? (
-                  <>
-                    <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
-                      Found {searchResults.length} user{searchResults.length !== 1 ? "s" : ""}
-                    </p>
-                    <div className="space-y-2">
-                      {searchResults.map((user) => (
-                        <UserCard
-                          key={user.id}
-                          user={user}
-                          showFollowButton
-                          isFollowing={user.isFollowing}
-                          onFollowToggle={handleFollowToggle}
-                        />
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                    No users found matching &ldquo;{searchQuery}&rdquo;
-                  </div>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[1.6fr,1fr]">
+          {/* User Search */}
+          <section id="find-users">
+            <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
+              Find Users
+            </h3>
+            <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
+              {/* Search Input */}
+              <div className="relative mb-4">
+                <Users className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by name or username..."
+                  className="w-full rounded-full border border-gray-300 bg-white py-3 pl-12 pr-4 text-base shadow transition-all focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
+                />
+                {searchLoading && (
+                  <Loader2 className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-purple-600" />
                 )}
               </div>
-            )}
 
-            {/* Initial State */}
-            {!searchQuery && (
-              <div className="py-8 text-center text-gray-500 dark:text-gray-400">
-                Search for users by name or username
+              {/* Search Results */}
+              {searchQuery && (
+                <div className="space-y-2">
+                  {searchLoading && searchResults.length === 0 ? (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-6 w-6 animate-spin text-purple-600" />
+                    </div>
+                  ) : searchResults.length > 0 ? (
+                    <>
+                      <p className="mb-2 text-sm text-gray-600 dark:text-gray-400">
+                        Found {searchResults.length} user{searchResults.length !== 1 ? "s" : ""}
+                      </p>
+                      <div className="space-y-2">
+                        {searchResults.map((user) => (
+                          <UserCard
+                            key={user.id}
+                            user={user}
+                            showFollowButton
+                            isFollowing={user.isFollowing}
+                            onFollowToggle={handleFollowToggle}
+                          />
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                      No users found matching &ldquo;{searchQuery}&rdquo;
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Initial State */}
+              {!searchQuery && (
+                <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                  Search for users by name or username
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Activity Feed */}
+          <section>
+            <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Recent Activity from People You Follow
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Stay up to date with new reviews and ratings
+              </p>
+            </div>
+
+            {feedLoading ? (
+              <div className="space-y-3">
+                {[...Array(3)].map((_, index) => (
+                  <div
+                    key={index}
+                    className="h-24 animate-pulse rounded-2xl bg-white/60 dark:bg-gray-800/60"
+                  />
+                ))}
+              </div>
+            ) : feedError ? (
+              <div className="rounded-2xl bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-300">
+                {feedError}
+              </div>
+            ) : feedItems.length === 0 ? (
+              <div className="rounded-2xl bg-white p-10 text-center shadow-lg dark:bg-gray-800">
+                <p className="text-gray-600 dark:text-gray-400">
+                  Follow users to see their activity here.
+                </p>
+                <Link
+                  href="/dashboard#find-users"
+                  className="mt-4 inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
+                >
+                  Find users to follow
+                </Link>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {feedItems.map((entry) => (
+                  <ActivityFeedItem
+                    key={entry.id}
+                    entry={entry}
+                    onSelectMovie={handleMovieSelect}
+                  />
+                ))}
               </div>
             )}
-          </div>
+          </section>
         </div>
 
-        {/* Activity Feed */}
-        <div className="mt-10">
-          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
-              Recent Activity from People You Follow
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Stay up to date with new reviews and ratings
-            </p>
-          </div>
-
-          {feedLoading ? (
-            <div className="space-y-3">
-              {[...Array(3)].map((_, index) => (
-                <div
-                  key={index}
-                  className="h-24 animate-pulse rounded-2xl bg-white/60 dark:bg-gray-800/60"
-                />
-              ))}
-            </div>
-          ) : feedError ? (
-            <div className="rounded-2xl bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-300">
-              {feedError}
-            </div>
-          ) : feedItems.length === 0 ? (
-            <div className="rounded-2xl bg-white p-10 text-center shadow-lg dark:bg-gray-800">
-              <p className="text-gray-600 dark:text-gray-400">
-                Follow users to see their activity here.
-              </p>
-              <Link
-                href="/search"
-                className="mt-4 inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
-              >
-                Find users to follow
-              </Link>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {feedItems.map((entry) => (
-                <ActivityFeedItem
-                  key={entry.id}
-                  entry={entry}
-                  onSelectMovie={handleMovieSelect}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Infrastructure Status */}
-        <div className="mt-8">
-          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            Infrastructure Status
-          </h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <StatusCard
-              title="Database"
-              status="Connected"
-              description="Supabase PostgreSQL"
-            />
-            <StatusCard
-              title="Authentication"
-              status="Working"
-              description="Google OAuth via NextAuth.js"
-            />
-            <StatusCard
-              title="Session"
-              status="Active"
-              description="Database session strategy"
-            />
-            <StatusCard
-              title="Prisma ORM"
-              status="Ready"
-              description="Schema deployed"
-            />
-            <StatusCard
-              title="Next.js"
-              status="Running"
-              description="App Router with TypeScript"
-            />
-            <StatusCard
-              title="Hosting"
-              status="Vercel"
-              description="Production ready"
-            />
-          </div>
-        </div>
-
-        {/* Next Steps */}
-        <div className="mt-8 rounded-2xl bg-purple-50 p-8 dark:bg-purple-900/20">
-          <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
-            Next Steps
-          </h3>
-          <ul className="space-y-2 text-gray-700 dark:text-gray-300">
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Set up TMDB API integration for movie data
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Build watchlist and watched features
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Implement ratings and reviews
-            </li>
-            <li className="flex items-center gap-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
-              Add social features (friends and activity feed)
-            </li>
-          </ul>
-        </div>
       </main>
-
       <MovieDetailModal
         movie={selectedMovie}
         isOpen={isModalOpen}
         onClose={closeModal}
       />
-    </div>
-  );
-}
-
-function StatusCard({
-  title,
-  status,
-  description,
-}: {
-  title: string;
-  status: string;
-  description: string;
-}) {
-  return (
-    <div className="rounded-xl bg-white p-6 shadow dark:bg-gray-800">
-      <div className="mb-2 flex items-center justify-between">
-        <h4 className="font-semibold text-gray-900 dark:text-white">{title}</h4>
-        <CheckCircle className="h-5 w-5 text-green-600" />
-      </div>
-      <p className="text-sm font-medium text-green-600">{status}</p>
-      <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-        {description}
-      </p>
     </div>
   );
 }
