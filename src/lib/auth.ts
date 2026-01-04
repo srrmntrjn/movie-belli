@@ -3,6 +3,21 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "./prisma";
 import type { NextAuthConfig } from "next-auth";
 
+// Validate required environment variables
+const requiredEnvVars = {
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+};
+
+const missingVars = Object.entries(requiredEnvVars)
+  .filter(([_, value]) => !value)
+  .map(([key]) => key);
+
+if (missingVars.length > 0 && process.env.NODE_ENV === "production") {
+  console.error(`Missing required environment variables: ${missingVars.join(", ")}`);
+}
+
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
