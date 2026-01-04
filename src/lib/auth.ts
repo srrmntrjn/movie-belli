@@ -27,4 +27,5 @@ export const authOptions = {
   session: {
     strategy: "database" as const,
   },
+  trustHost: true, // Required for Vercel deployments
 } satisfies NextAuthConfig;
