@@ -4,9 +4,11 @@ import { prisma } from "@/lib/prisma";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { identifier: string } }
+  context: RouteContext<"/api/users/[identifier]/following">
 ) {
   try {
+    const { identifier } = await context.params;
+
     const session = await auth();
 
     if (!session?.user?.id) {
@@ -18,7 +20,7 @@ export async function GET(
 
     const target = await prisma.user.findFirst({
       where: {
-        OR: [{ id: params.identifier }, { username: params.identifier }],
+        OR: [{ id: identifier }, { username: identifier }],
       },
       select: { id: true },
     });

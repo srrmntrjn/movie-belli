@@ -5,10 +5,11 @@ import { tmdb } from "@/lib/tmdb";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { identifier: string } }
+  context: RouteContext<"/api/users/[identifier]">
 ) {
   try {
-    const identifier = params.identifier;
+    const { identifier } = await context.params;
+
     if (!identifier) {
       return NextResponse.json(
         { error: "Missing user identifier" },

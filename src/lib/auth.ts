@@ -31,7 +31,6 @@ export const authOptions = {
     session: async ({ session, user }) => {
       if (session?.user) {
         session.user.id = user.id;
-        // @ts-expect-error - Add custom user fields
         session.user.username = user.username;
       }
       return session;
