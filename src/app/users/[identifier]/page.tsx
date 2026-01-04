@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, User, Users, Star, ArrowLeft } from "lucide-react";
 import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
@@ -43,13 +43,16 @@ interface ProfileData {
   };
 }
 
-export default function UserProfilePage({
-  params,
-}: {
-  params: { identifier: string };
-}) {
+export default function UserProfilePage() {
   const { status } = useSession();
   const router = useRouter();
+  const params = useParams();
+  const identifier = useMemo(() => {
+    const raw = params?.identifier;
+    if (!raw) return "";
+    if (Array.isArray(raw)) return raw[0] ?? "";
+    return raw;
+  }, [params]);
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,10 +61,11 @@ export default function UserProfilePage({
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
-  const identifier = params.identifier;
-
   const fetchProfileData = useCallback(
     async (page = 1) => {
+      if (!identifier) {
+        throw new Error("Missing user identifier");
+      }
       const response = await fetch(
         `/api/users/${encodeURIComponent(identifier)}?page=${page}`
       );
@@ -76,6 +80,13 @@ export default function UserProfilePage({
 
   useEffect(() => {
     let isMounted = true;
+    if (!identifier) {
+      setError("Profile not found");
+      setLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
     const loadProfile = async () => {
       setLoading(true);
       setError(null);
