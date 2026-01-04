@@ -41,6 +41,8 @@ model User {
   // Follows (one-directional)
   following Follow[] @relation("UserFollows")
   followers Follow[] @relation("UserFollowers")
+  featureRequests FeatureRequest[]
+  featureVotes FeatureVote[]
 }
 
 // NextAuth.js required models
@@ -248,4 +250,47 @@ model Follow {
   @@unique([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+enum FeatureRequestType {
+  FEATURE
+  BUG
+}
+
+enum FeatureRequestStatus {
+  OPEN
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+}
+
+model FeatureRequest {
+  id          String                 @id @default(cuid())
+  userId      String
+  title       String
+  description String   @db.Text
+  type        FeatureRequestType
+  status      FeatureRequestStatus  @default(OPEN)
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+  votes       FeatureVote[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([type])
+  @@index([status])
+}
+
+model FeatureVote {
+  id         String  @id @default(cuid())
+  requestId  String
+  userId     String
+  value      Int
+  createdAt  DateTime @default(now())
+
+  request FeatureRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, userId])
+  @@index([userId])
 }
