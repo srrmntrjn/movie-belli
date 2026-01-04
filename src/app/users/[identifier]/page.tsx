@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
@@ -34,6 +34,13 @@ interface ProfileData {
   reviews: ProfileReview[];
   isCurrentUser: boolean;
   isFollowing: boolean;
+  pagination: {
+    page: number;
+    total: number;
+    pageSize: number;
+    totalPages: number;
+    hasMore: boolean;
+  };
 }
 
 export default function UserProfilePage({
@@ -48,8 +55,24 @@ export default function UserProfilePage({
   const [error, setError] = useState<string | null>(null);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const identifier = params.identifier;
+
+  const fetchProfileData = useCallback(
+    async (page = 1) => {
+      const response = await fetch(
+        `/api/users/${encodeURIComponent(identifier)}?page=${page}`
+      );
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || "User not found");
+      }
+      return payload as ProfileData;
+    },
+    [identifier]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -57,16 +80,10 @@ export default function UserProfilePage({
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(
-          `/api/users/${encodeURIComponent(identifier)}`
-        );
-        if (!response.ok) {
-          const data = await response.json().catch(() => ({}));
-          throw new Error(data.error || "User not found");
-        }
-        const data: ProfileData = await response.json();
+        const data = await fetchProfileData(1);
         if (isMounted) {
           setProfile(data);
+          setLoadMoreError(null);
         }
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -86,7 +103,7 @@ export default function UserProfilePage({
     return () => {
       isMounted = false;
     };
-  }, [identifier]);
+  }, [fetchProfileData]);
 
   const handleFollowChange = (isFollowing: boolean) => {
     setProfile((prev) => {
@@ -112,6 +129,38 @@ export default function UserProfilePage({
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedMovie(null);
+  };
+
+  const handleLoadMore = async () => {
+    if (!profile?.pagination.hasMore || loadingMore) {
+      return;
+    }
+    setLoadingMore(true);
+    setLoadMoreError(null);
+    try {
+      const nextPage = profile.pagination.page + 1;
+      const data = await fetchProfileData(nextPage);
+      setProfile((prev) =>
+        prev
+          ? {
+              ...prev,
+              user: data.user,
+              stats: data.stats,
+              isCurrentUser: data.isCurrentUser,
+              isFollowing: data.isFollowing,
+              reviews: [...prev.reviews, ...data.reviews],
+              pagination: data.pagination,
+            }
+          : data
+      );
+    } catch (err) {
+      console.error("Failed to load more reviews:", err);
+      setLoadMoreError(
+        err instanceof Error ? err.message : "Failed to load more reviews"
+      );
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   if (loading) {
@@ -221,6 +270,11 @@ export default function UserProfilePage({
           <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
             Recent Reviews
           </h2>
+          {profile.stats.reviews > 0 && (
+            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+              Showing {profile.reviews.length} of {profile.stats.reviews} reviews
+            </p>
+          )}
 
           {profile.reviews.length === 0 ? (
             <div className="rounded-2xl bg-white p-10 text-center shadow dark:bg-gray-900">
@@ -239,6 +293,21 @@ export default function UserProfilePage({
                   onSelect={handleMovieSelect}
                 />
               ))}
+            </div>
+          )}
+
+          {profile.pagination.hasMore && (
+            <div className="mt-6 flex flex-col items-center gap-2">
+              <button
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {loadingMore ? "Loading more..." : "Load more reviews"}
+              </button>
+              {loadMoreError && (
+                <p className="text-sm text-red-500">{loadMoreError}</p>
+              )}
             </div>
           )}
         </div>

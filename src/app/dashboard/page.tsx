@@ -7,6 +7,9 @@ import { Film, LogOut, User, Mail, CheckCircle, Search, Star, Users, Loader2 } f
 import Image from "next/image";
 import Link from "next/link";
 import { UserCard } from "@/components/user/UserCard";
+import { ActivityFeedItem, type ActivityFeedEntry } from "@/components/feed/ActivityFeedItem";
+import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
+import type { Movie } from "@/lib/tmdb";
 
 interface SearchResultUser {
   id: string;
@@ -23,6 +26,11 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResultUser[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [feedItems, setFeedItems] = useState<ActivityFeedEntry[]>([]);
+  const [feedLoading, setFeedLoading] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -76,6 +84,56 @@ export default function Dashboard() {
         user.id === userId ? { ...user, isFollowing: following } : user
       )
     );
+  };
+
+  useEffect(() => {
+    if (status !== "authenticated") {
+      return;
+    }
+
+    let isMounted = true;
+    const loadFeed = async () => {
+      setFeedLoading(true);
+      setFeedError(null);
+      try {
+        const response = await fetch("/api/feed");
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || "Unable to load activity feed");
+        }
+        if (isMounted) {
+          setFeedItems(data.feed || []);
+        }
+      } catch (error) {
+        console.error("Error loading activity feed:", error);
+        if (isMounted) {
+          setFeedError(
+            error instanceof Error
+              ? error.message
+              : "Unable to load activity feed"
+          );
+        }
+      } finally {
+        if (isMounted) {
+          setFeedLoading(false);
+        }
+      }
+    };
+
+    loadFeed();
+    return () => {
+      isMounted = false;
+    };
+  }, [status]);
+
+  const handleMovieSelect = (movie: Movie) => {
+    setSelectedMovie(movie);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedMovie(null);
   };
 
   if (status === "loading") {
@@ -261,6 +319,55 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Activity Feed */}
+        <div className="mt-10">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+              Recent Activity from People You Follow
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Stay up to date with new reviews and ratings
+            </p>
+          </div>
+
+          {feedLoading ? (
+            <div className="space-y-3">
+              {[...Array(3)].map((_, index) => (
+                <div
+                  key={index}
+                  className="h-24 animate-pulse rounded-2xl bg-white/60 dark:bg-gray-800/60"
+                />
+              ))}
+            </div>
+          ) : feedError ? (
+            <div className="rounded-2xl bg-red-50 p-4 text-red-600 dark:bg-red-900/20 dark:text-red-300">
+              {feedError}
+            </div>
+          ) : feedItems.length === 0 ? (
+            <div className="rounded-2xl bg-white p-10 text-center shadow-lg dark:bg-gray-800">
+              <p className="text-gray-600 dark:text-gray-400">
+                Follow users to see their activity here.
+              </p>
+              <Link
+                href="/search"
+                className="mt-4 inline-flex items-center justify-center rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-purple-700"
+              >
+                Find users to follow
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {feedItems.map((entry) => (
+                <ActivityFeedItem
+                  key={entry.id}
+                  entry={entry}
+                  onSelectMovie={handleMovieSelect}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+
         {/* Infrastructure Status */}
         <div className="mt-8">
           <h3 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
@@ -325,6 +432,12 @@ export default function Dashboard() {
           </ul>
         </div>
       </main>
+
+      <MovieDetailModal
+        movie={selectedMovie}
+        isOpen={isModalOpen}
+        onClose={closeModal}
+      />
     </div>
   );
 }

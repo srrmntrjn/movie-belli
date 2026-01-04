@@ -3,12 +3,32 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { tmdb } from "@/lib/tmdb";
 
+const DEFAULT_PAGE_SIZE = 24;
+const MAX_PAGE_SIZE = 50;
+
+const toPositiveInt = (value: string | null, fallback: number) => {
+  if (!value) return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed <= 0) {
+    return fallback;
+  }
+  return Math.floor(parsed);
+};
+
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   context: RouteContext<"/api/users/[identifier]">
 ) {
   try {
     const { identifier } = await context.params;
+    const searchParams = new URL(request.url).searchParams;
+    const page = toPositiveInt(searchParams.get("page"), 1);
+    const requestedLimit = toPositiveInt(
+      searchParams.get("limit"),
+      DEFAULT_PAGE_SIZE
+    );
+    const pageSize = Math.min(requestedLimit, MAX_PAGE_SIZE);
+    const skip = (page - 1) * pageSize;
 
     if (!identifier) {
       return NextResponse.json(
@@ -44,17 +64,23 @@ export async function GET(
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    const ratings = await prisma.rating.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      select: {
-        id: true,
-        tmdbId: true,
-        rating: true,
-        createdAt: true,
-      },
-    });
+    const [ratings, totalReviews] = await prisma.$transaction([
+      prisma.rating.findMany({
+        where: { userId: user.id },
+        orderBy: { createdAt: "desc" },
+        skip,
+        take: pageSize,
+        select: {
+          id: true,
+          tmdbId: true,
+          rating: true,
+          createdAt: true,
+        },
+      }),
+      prisma.rating.count({
+        where: { userId: user.id },
+      }),
+    ]);
 
     const reviews = await Promise.all(
       ratings.map(async (rating) => {
@@ -120,6 +146,13 @@ export async function GET(
       reviews: validReviews,
       isCurrentUser,
       isFollowing,
+      pagination: {
+        page,
+        total: totalReviews,
+        pageSize,
+        totalPages: totalReviews === 0 ? 1 : Math.ceil(totalReviews / pageSize),
+        hasMore: skip + validReviews.length < totalReviews,
+      },
     });
   } catch (error) {
     console.error("Error loading user profile:", error);
