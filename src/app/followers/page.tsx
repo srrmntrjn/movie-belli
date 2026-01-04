@@ -1,31 +1,31 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { Loader2, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
-interface FollowingUser {
+interface Follower {
   id: string;
   name: string | null;
-  username?: string | null;
+  username: string | null;
   email: string;
-  image?: string | null;
-  bio?: string | null;
+  image: string | null;
   followersCount: number;
   followingCount: number;
   ratingsCount: number;
   followedAt: string;
+  isFollowing: boolean;
 }
 
-export default function FollowingPage() {
+export default function FollowersPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [following, setFollowing] = useState<FollowingUser[]>([]);
+  const [followers, setFollowers] = useState<Follower[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -35,50 +35,61 @@ export default function FollowingPage() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      fetchFollowing();
+      fetchFollowers();
     }
   }, [status]);
 
-  const fetchFollowing = async () => {
-    setLoading(true);
-    setError(null);
+  const fetchFollowers = async () => {
     try {
-      const response = await fetch("/api/users/me/following");
-      if (!response.ok) {
-        throw new Error("Failed to load following list");
+      const response = await fetch("/api/users/me/followers");
+      if (response.ok) {
+        const data = await response.json();
+        setFollowers(data.followers);
+        // Initialize following states
+        const states: Record<string, boolean> = {};
+        data.followers.forEach((follower: Follower) => {
+          states[follower.id] = follower.isFollowing;
+        });
+        setFollowingStates(states);
       }
-      const data = await response.json();
-      setFollowing(data.following || []);
-    } catch (err) {
-      console.error("Error loading following:", err);
-      setError("Unable to load your following list. Please try again.");
+    } catch (error) {
+      console.error("Error fetching followers:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUnfollow = async (userId: string) => {
+  const handleFollowToggle = async (userId: string) => {
+    const isCurrentlyFollowing = followingStates[userId];
+
     try {
       const response = await fetch("/api/follows", {
-        method: "DELETE",
+        method: isCurrentlyFollowing ? "DELETE" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId }),
       });
 
       if (response.ok) {
-        setFollowing((prev) => prev.filter((user) => user.id !== userId));
+        setFollowingStates((prev) => ({
+          ...prev,
+          [userId]: !isCurrentlyFollowing,
+        }));
       }
     } catch (error) {
-      console.error("Error unfollowing user:", error);
+      console.error("Error toggling follow:", error);
     }
   };
 
-  if (status === "loading" || !session) {
+  if (status === "loading" || loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
         <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
       </div>
     );
+  }
+
+  if (!session) {
+    return null;
   }
 
   return (
@@ -95,72 +106,72 @@ export default function FollowingPage() {
 
         {/* Title */}
         <h1 className="mb-6 text-3xl font-bold text-gray-900 dark:text-white">
-          Following
+          Followers
         </h1>
 
-        {error && (
-          <div className="mb-6 rounded-xl bg-red-50 p-4 text-red-700 dark:bg-red-900/20 dark:text-red-400">
-            {error}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
-          </div>
-        ) : following.length === 0 ? (
+        {/* Followers List */}
+        {followers.length === 0 ? (
           <div className="rounded-2xl border border-gray-200 bg-white p-8 text-center dark:border-gray-700 dark:bg-gray-800/60">
             <p className="text-gray-600 dark:text-gray-400">
-              You&apos;re not following anyone yet.
+              You don&apos;t have any followers yet.
             </p>
           </div>
         ) : (
           <div className="divide-y divide-gray-200 dark:divide-gray-700">
-            {following.map((user) => (
+            {followers.map((follower) => (
               <div
-                key={user.id}
+                key={follower.id}
                 className="flex items-center justify-between py-4"
               >
                 {/* User Info */}
                 <Link
-                  href={`/users/${user.id}`}
+                  href={`/users/${follower.id}`}
                   className="flex items-center gap-3 flex-1"
                 >
                   {/* Profile Image */}
-                  {user.image ? (
+                  {follower.image ? (
                     <Image
-                      src={user.image}
-                      alt={user.name || user.email}
+                      src={follower.image}
+                      alt={follower.name || follower.email}
                       width={48}
                       height={48}
                       className="h-12 w-12 rounded-full object-cover"
                     />
                   ) : (
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-lg font-bold text-white">
-                      {(user.name || user.email)[0].toUpperCase()}
+                      {(follower.name || follower.email)[0].toUpperCase()}
                     </div>
                   )}
 
                   {/* Name */}
                   <div>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {user.name || user.email}
+                      {follower.name || follower.email}
                     </p>
-                    {user.username && (
+                    {follower.username && (
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        @{user.username}
+                        @{follower.username}
                       </p>
                     )}
                   </div>
                 </Link>
 
-                {/* Following Button */}
-                <button
-                  onClick={() => handleUnfollow(user.id)}
-                  className="text-sm font-medium text-gray-600 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
-                >
-                  Following
-                </button>
+                {/* Follow/Following Button */}
+                {followingStates[follower.id] ? (
+                  <button
+                    onClick={() => handleFollowToggle(follower.id)}
+                    className="text-sm font-medium text-gray-600 transition hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200"
+                  >
+                    Following
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleFollowToggle(follower.id)}
+                    className="rounded-full bg-purple-600 px-6 py-2 text-sm font-medium text-white transition hover:bg-purple-700"
+                  >
+                    Follow
+                  </button>
+                )}
               </div>
             ))}
           </div>

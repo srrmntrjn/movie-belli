@@ -2,8 +2,8 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { ArrowLeft, List, Lightbulb } from "lucide-react";
+import { useEffect } from "react";
+import { ArrowLeft, List } from "lucide-react";
 import Link from "next/link";
 
 export default function WatchlistPage() {
@@ -30,22 +30,6 @@ export default function WatchlistPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-          <span className="text-xl font-bold text-gray-900 dark:text-white">
-            tivi
-          </span>
-          <Link
-            href="/feedback"
-            className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 backdrop-blur-sm transition-colors hover:bg-white dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            <Lightbulb className="h-4 w-4" />
-            Feedback
-          </Link>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-7xl px-4 py-8">
         {/* Back Button */}
         <button
@@ -83,7 +67,7 @@ export default function WatchlistPage() {
           </h3>
           <p className="mt-2 max-w-md text-gray-600 dark:text-gray-400">
             Start adding movies you want to watch. Search for movies and add them to your
-            watchlist to keep track of what you'd like to see.
+            watchlist to keep track of what you&apos;d like to see.
           </p>
           <Link
             href="/search"

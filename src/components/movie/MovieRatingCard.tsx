@@ -1,13 +1,16 @@
+"use client";
+
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Star, Calendar, ThumbsDown, Meh, ThumbsUp } from "lucide-react";
-import { Movie } from "@/lib/tmdb";
 import { format } from "date-fns";
+import type { KeyboardEvent } from "react";
+import { Movie } from "@/lib/tmdb";
 
 interface MovieRatingCardProps {
   movie: Movie;
   rating: number;
   createdAt: Date;
-  onSelect?: (movie: Movie) => void;
   showReviewer?: boolean;
   reviewer?: {
     name: string;
@@ -54,10 +57,10 @@ export function MovieRatingCard({
   movie,
   rating,
   createdAt,
-  onSelect,
   showReviewer = false,
   reviewer,
 }: MovieRatingCardProps) {
+  const router = useRouter();
   const posterUrl = movie.poster_path
     ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
     : null;
@@ -72,9 +75,23 @@ export function MovieRatingCard({
 
   const formattedDate = format(new Date(createdAt), "MMM d, yyyy");
 
+  const handleCardClick = () => {
+    router.push(`/movies/${movie.id}`);
+  };
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleCardClick();
+    }
+  };
+
   return (
     <div
-      onClick={() => onSelect?.(movie)}
+      role="link"
+      tabIndex={0}
+      onClick={handleCardClick}
+      onKeyDown={handleKeyDown}
       className="group relative cursor-pointer overflow-hidden rounded-lg bg-white shadow-md transition-all hover:scale-105 hover:shadow-xl dark:bg-gray-800"
     >
       {/* Movie Poster */}

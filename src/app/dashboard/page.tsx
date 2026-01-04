@@ -3,11 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import {
-  Star,
-  Lightbulb,
-  Search,
-} from "lucide-react";
+import { Star, Search } from "lucide-react";
 import Link from "next/link";
 import { ActivityFeedItem, type ActivityFeedEntry } from "@/components/feed/ActivityFeedItem";
 import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
@@ -152,22 +148,6 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4">
-          <span className="text-xl font-bold text-gray-900 dark:text-white">
-            tivi
-          </span>
-          <Link
-            href="/feedback"
-            className="inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-sm font-medium text-gray-700 backdrop-blur-sm transition-colors hover:bg-white dark:bg-gray-800/80 dark:text-gray-300 dark:hover:bg-gray-800"
-          >
-            <Lightbulb className="h-4 w-4" />
-            Feedback
-          </Link>
-        </div>
-      </header>
-
       {/* Main Content */}
       <main className="px-2 py-6 sm:px-4">
         <div className="mx-auto mb-10 max-w-3xl px-2 sm:px-4">
@@ -292,4 +272,3 @@ export default function Dashboard() {
     </div>
   );
 }
-

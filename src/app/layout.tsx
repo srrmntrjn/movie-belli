@@ -3,6 +3,7 @@ import { Instrument_Sans, Instrument_Serif } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
 import { BottomNav } from "@/components/BottomNav";
+import { TopNav } from "@/components/TopNav";
 
 const instrumentSans = Instrument_Sans({
   variable: "--font-instrument-sans",
@@ -32,6 +33,7 @@ export default function RootLayout({
         className={`${instrumentSans.variable} ${instrumentSerif.variable} antialiased`}
       >
         <Providers>
+          <TopNav />
           {children}
           <BottomNav />
         </Providers>

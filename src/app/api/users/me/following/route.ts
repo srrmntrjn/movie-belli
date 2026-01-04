@@ -15,15 +15,22 @@ export async function GET() {
 
     const following = await prisma.follow.findMany({
       where: { followerId: session.user.id },
-      select: {
-        createdAt: true,
+      include: {
         following: {
           select: {
             id: true,
             name: true,
             username: true,
+            email: true,
             image: true,
             bio: true,
+            _count: {
+              select: {
+                followers: true,
+                following: true,
+                ratings: true,
+              },
+            },
           },
         },
       },
@@ -34,12 +41,16 @@ export async function GET() {
       id: entry.following.id,
       name: entry.following.name,
       username: entry.following.username,
+      email: entry.following.email,
       image: entry.following.image,
       bio: entry.following.bio,
+      followersCount: entry.following._count.followers,
+      followingCount: entry.following._count.following,
+      ratingsCount: entry.following._count.ratings,
       followedAt: entry.createdAt,
     }));
 
-    return NextResponse.json({ following: formatted });
+    return NextResponse.json({ following: formatted, total: formatted.length });
   } catch (error) {
     console.error("Error fetching following list:", error);
     return NextResponse.json(

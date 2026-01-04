@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { Loader2, User, Users, Star, ArrowLeft } from "lucide-react";
-import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
 import { MovieRatingCard } from "@/components/movie/MovieRatingCard";
 import { FollowButton } from "@/components/user/FollowButton";
 import type { Movie } from "@/lib/tmdb";
@@ -56,8 +55,6 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
@@ -130,16 +127,6 @@ export default function UserProfilePage() {
         },
       };
     });
-  };
-
-  const handleMovieSelect = (movie: Movie) => {
-    setSelectedMovie(movie);
-    setIsModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedMovie(null);
   };
 
   const handleLoadMore = async () => {
@@ -301,7 +288,6 @@ export default function UserProfilePage() {
                   movie={review.movie}
                   rating={review.rating}
                   createdAt={new Date(review.createdAt)}
-                  onSelect={handleMovieSelect}
                 />
               ))}
             </div>
@@ -324,11 +310,6 @@ export default function UserProfilePage() {
         </div>
       </div>
 
-      <MovieDetailModal
-        movie={selectedMovie}
-        isOpen={isModalOpen}
-        onClose={closeModal}
-      />
     </div>
   );
 }

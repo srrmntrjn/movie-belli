@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Loader2, Film } from "lucide-react";
 import { MovieRatingCard } from "@/components/movie/MovieRatingCard";
-import { MovieDetailModal } from "@/components/movie/MovieDetailModal";
 import { Movie } from "@/lib/tmdb";
 
 interface Review {
@@ -21,8 +20,6 @@ export default function MyReviewsPage() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -55,16 +52,6 @@ export default function MyReviewsPage() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleMovieClick = (movie: Movie) => {
-    setSelectedMovie(movie);
-    setIsModalOpen(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setSelectedMovie(null);
   };
 
   if (status === "loading" || !session) {
@@ -113,7 +100,6 @@ export default function MyReviewsPage() {
                 movie={review.movie}
                 rating={review.rating}
                 createdAt={new Date(review.createdAt)}
-                onSelect={handleMovieClick}
               />
             ))}
           </div>
@@ -138,12 +124,6 @@ export default function MyReviewsPage() {
           </div>
         )}
 
-        {/* Movie Detail Modal */}
-        <MovieDetailModal
-          movie={selectedMovie}
-          isOpen={isModalOpen}
-          onClose={handleCloseModal}
-        />
       </div>
     </div>
   );
