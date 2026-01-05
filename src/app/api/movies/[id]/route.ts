@@ -21,8 +21,9 @@ const resolveMovieId = (request: Request, params?: { id?: string }) => {
 
 export async function GET(
   request: Request,
-  { params }: { params: { id?: string } }
+  context: { params: { id: string } }
 ) {
+  const params = context.params ?? { id: "" };
   const movieId = resolveMovieId(request, params);
 
   if (!movieId) {
