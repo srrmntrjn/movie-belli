@@ -400,7 +400,7 @@ export default function Dashboard() {
                 <ActivityFeedItem
                   key={entry.id}
                   entry={entry}
-                  onSelectMovie={handleMovieSelect}
+                  onSelectMovie={(movie) => handleNavigateToMovie(movie.id)}
                 />
               ))}
             </div>
