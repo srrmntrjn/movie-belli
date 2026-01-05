@@ -31,15 +31,6 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Create activity
-    await prisma.activity.create({
-      data: {
-        userId: session.user.id,
-        type: "MARKED_AS_WATCHED",
-        tmdbId,
-      },
-    });
-
     // Remove from watchlist if it exists
     await prisma.watchlistItem.deleteMany({
       where: {

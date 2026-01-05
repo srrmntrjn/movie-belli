@@ -3,10 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { MessageCircle, Star } from "lucide-react";
+import { Bookmark, MessageCircle, Star } from "lucide-react";
 import type { Movie } from "@/lib/tmdb";
 
-type ActivityType = "RATED_MOVIE" | "REVIEWED_MOVIE";
+type ActivityType = "RATED_MOVIE" | "REVIEWED_MOVIE" | "ADDED_TO_WATCHLIST";
 
 export interface ActivityFeedEntry {
   id: string;
@@ -42,8 +42,12 @@ export function ActivityFeedItem({
   const rating =
     typeof entry.metadata?.rating === "number" ? entry.metadata.rating : null;
 
-  const actionLabel =
-    entry.type === "REVIEWED_MOVIE" ? "reviewed" : "rated";
+  const actionLabelMap: Record<ActivityType, string> = {
+    RATED_MOVIE: "rated",
+    REVIEWED_MOVIE: "reviewed",
+    ADDED_TO_WATCHLIST: "bookmarked",
+  };
+  const actionLabel = actionLabelMap[entry.type] ?? "interacted with";
 
   const profileIdentifier = entry.user.username || entry.user.id;
 
@@ -98,6 +102,12 @@ export function ActivityFeedItem({
             <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2 py-1 text-blue-600 dark:bg-blue-500/10 dark:text-blue-300">
               <MessageCircle className="h-4 w-4" />
               Review posted
+            </span>
+          )}
+          {entry.type === "ADDED_TO_WATCHLIST" && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-purple-50 px-2 py-1 text-purple-600 dark:bg-purple-500/10 dark:text-purple-300">
+              <Bookmark className="h-4 w-4" />
+              Watchlist
             </span>
           )}
           <span>•</span>

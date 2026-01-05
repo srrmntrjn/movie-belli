@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { tmdb } from "@/lib/tmdb";
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,9 +42,14 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ success: true, watchlistItem });
-  } catch (error: any) {
-    // Handle unique constraint violation (already in watchlist)
-    if (error?.code === "P2002") {
+  } catch (error) {
+    const isUniqueConstraintViolation =
+      typeof error === "object" &&
+      error !== null &&
+      "code" in error &&
+      (error as { code?: string }).code === "P2002";
+
+    if (isUniqueConstraintViolation) {
       return NextResponse.json(
         { error: "Movie already in watchlist" },
         { status: 409 }
@@ -94,6 +100,60 @@ export async function DELETE(request: NextRequest) {
     console.error("Error removing from watchlist:", error);
     return NextResponse.json(
       { error: "Failed to remove from watchlist" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function GET() {
+  try {
+    const session = await auth();
+
+    if (!session?.user?.id) {
+      return NextResponse.json(
+        { error: "Unauthorized - Please sign in" },
+        { status: 401 }
+      );
+    }
+
+    const items = await prisma.watchlistItem.findMany({
+      where: { userId: session.user.id },
+      orderBy: { addedAt: "desc" },
+    });
+
+    if (items.length === 0) {
+      return NextResponse.json({ watchlist: [] });
+    }
+
+    const entries = await Promise.all(
+      items.map(async (item) => {
+        try {
+          const movie = await tmdb.getMovie(item.tmdbId);
+          return {
+            id: item.id,
+            tmdbId: item.tmdbId,
+            addedAt: item.addedAt,
+            movie,
+          };
+        } catch (error) {
+          console.error(
+            `Failed to load movie ${item.tmdbId} for watchlist item ${item.id}:`,
+            error
+          );
+          return null;
+        }
+      })
+    );
+
+    const filtered = entries.filter(
+      (entry): entry is NonNullable<typeof entry> => entry !== null
+    );
+
+    return NextResponse.json({ watchlist: filtered });
+  } catch (error) {
+    console.error("Error loading watchlist:", error);
+    return NextResponse.json(
+      { error: "Failed to load watchlist" },
       { status: 500 }
     );
   }

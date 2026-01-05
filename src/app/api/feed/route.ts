@@ -4,10 +4,14 @@ import { prisma } from "@/lib/prisma";
 import { tmdb } from "@/lib/tmdb";
 
 const FEED_LIMIT = 10;
-type SupportedActivityType = "RATED_MOVIE" | "REVIEWED_MOVIE";
+type SupportedActivityType =
+  | "RATED_MOVIE"
+  | "REVIEWED_MOVIE"
+  | "ADDED_TO_WATCHLIST";
 const SUPPORTED_ACtiviTY_TYPES: SupportedActivityType[] = [
   "RATED_MOVIE",
   "REVIEWED_MOVIE",
+  "ADDED_TO_WATCHLIST",
 ];
 
 export async function GET() {
@@ -26,15 +30,16 @@ export async function GET() {
       select: { followingId: true },
     });
 
-    const followedIds = follows.map((follow) => follow.followingId);
-
-    if (followedIds.length === 0) {
-      return NextResponse.json({ feed: [] });
-    }
+    const participantIds = Array.from(
+      new Set([
+        session.user.id,
+        ...follows.map((follow) => follow.followingId),
+      ])
+    );
 
     const activities = await prisma.activity.findMany({
       where: {
-        userId: { in: followedIds },
+        userId: { in: participantIds },
         type: { in: [...SUPPORTED_ACtiviTY_TYPES] },
       },
       include: {
