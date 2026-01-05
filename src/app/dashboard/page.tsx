@@ -3,7 +3,10 @@
 import { useSession, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { KeyboardEvent, MouseEvent } from "react";
+import type {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+} from "react";
 import { Bookmark, Check, Plus, Search, Star } from "lucide-react";
 import Link from "next/link";
 import { ActivityFeedItem, type ActivityFeedEntry } from "@/components/feed/ActivityFeedItem";
@@ -78,13 +81,13 @@ export default function Dashboard() {
 
   // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: globalThis.MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowSearchDropdown(false);
       }
     };
 
-    const handleEscapeKey = (event: KeyboardEvent) => {
+    const handleEscapeKey = (event: globalThis.KeyboardEvent) => {
       if (event.key === 'Escape') {
         setShowSearchDropdown(false);
       }
@@ -153,14 +156,17 @@ export default function Dashboard() {
     router.push(`/movies/${movieId}`);
   };
 
-  const handleResultKeyDown = (event: KeyboardEvent<HTMLDivElement>, movieId: number) => {
+  const handleResultKeyDown = (
+    event: ReactKeyboardEvent<HTMLDivElement>,
+    movieId: number
+  ) => {
     if (event.key === "Enter") {
       handleNavigateToMovie(movieId);
     }
   };
 
   const handleMarkAsWatched = (
-    event: MouseEvent<HTMLButtonElement>,
+    event: ReactMouseEvent<HTMLButtonElement>,
     movie: Movie
   ) => {
     event.stopPropagation();
@@ -170,7 +176,7 @@ export default function Dashboard() {
   };
 
   const handleWatchlistToggle = async (
-    event: MouseEvent<HTMLButtonElement>,
+    event: ReactMouseEvent<HTMLButtonElement>,
     movie: Movie
   ) => {
     event.stopPropagation();
