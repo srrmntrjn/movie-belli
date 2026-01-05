@@ -3,6 +3,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --page-background: #ffffff;
 }
 
 @theme inline {
@@ -16,11 +17,12 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --page-background: linear-gradient(135deg, #0b1b36 0%, #111827 45%, #0f172a 100%);
   }
 }
 
 body {
-  background: var(--background);
+  background: var(--page-background);
   color: var(--foreground);
   font-family: var(--font-sans), "Instrument Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
