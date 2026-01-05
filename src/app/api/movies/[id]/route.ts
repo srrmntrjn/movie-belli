@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 const BASE_URL = "https://api.themoviedb.org/3";
@@ -20,10 +20,10 @@ const resolveMovieId = (request: Request, params?: { id?: string }) => {
 };
 
 export async function GET(
-  request: Request,
-  context: { params: { id: string } }
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
-  const params = context.params ?? { id: "" };
+  const params = await context.params;
   const movieId = resolveMovieId(request, params);
 
   if (!movieId) {
