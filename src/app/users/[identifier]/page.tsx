@@ -1,12 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
-import { useSession } from "next-auth/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { signOut, useSession } from "next-auth/react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { Loader2, User, Users, Star, ArrowLeft } from "lucide-react";
-import { MovieRatingCard } from "@/components/movie/MovieRatingCard";
-import { FollowButton } from "@/components/user/FollowButton";
+import { Check, Bookmark, Loader2, User } from "lucide-react";
 import type { Movie } from "@/lib/tmdb";
 
 interface ProfileReview {
@@ -23,23 +21,16 @@ interface ProfileData {
     username: string | null;
     bio: string | null;
     image: string | null;
-    joinedAt: string;
+    memberSince: string;
   };
   stats: {
-    reviews: number;
     followers: number;
     following: number;
+    beenCount: number;
+    wantToTryCount: number;
   };
   reviews: ProfileReview[];
   isCurrentUser: boolean;
-  isFollowing: boolean;
-  pagination: {
-    page: number;
-    total: number;
-    pageSize: number;
-    totalPages: number;
-    hasMore: boolean;
-  };
 }
 
 export default function UserProfilePage() {
@@ -55,16 +46,14 @@ export default function UserProfilePage() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
   const fetchProfileData = useCallback(
-    async (page = 1) => {
+    async () => {
       if (!identifier) {
         throw new Error("Missing user identifier");
       }
       const response = await fetch(
-        `/api/users/${encodeURIComponent(identifier)}?page=${page}`
+        `/api/users/${encodeURIComponent(identifier)}?page=1&limit=10`
       );
       const payload = await response.json().catch(() => ({}));
       if (!response.ok) {
@@ -88,10 +77,9 @@ export default function UserProfilePage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await fetchProfileData(1);
+        const data = await fetchProfileData();
         if (isMounted) {
           setProfile(data);
-          setLoadMoreError(null);
         }
       } catch (err) {
         console.error("Failed to load profile:", err);
@@ -112,54 +100,6 @@ export default function UserProfilePage() {
       isMounted = false;
     };
   }, [fetchProfileData]);
-
-  const handleFollowChange = (isFollowing: boolean) => {
-    setProfile((prev) => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        isFollowing,
-        stats: {
-          ...prev.stats,
-          followers: isFollowing
-            ? prev.stats.followers + 1
-            : Math.max(prev.stats.followers - 1, 0),
-        },
-      };
-    });
-  };
-
-  const handleLoadMore = async () => {
-    if (!profile?.pagination.hasMore || loadingMore) {
-      return;
-    }
-    setLoadingMore(true);
-    setLoadMoreError(null);
-    try {
-      const nextPage = profile.pagination.page + 1;
-      const data = await fetchProfileData(nextPage);
-      setProfile((prev) =>
-        prev
-          ? {
-              ...prev,
-              user: data.user,
-              stats: data.stats,
-              isCurrentUser: data.isCurrentUser,
-              isFollowing: data.isFollowing,
-              reviews: [...prev.reviews, ...data.reviews],
-              pagination: data.pagination,
-            }
-          : data
-      );
-    } catch (err) {
-      console.error("Failed to load more reviews:", err);
-      setLoadMoreError(
-        err instanceof Error ? err.message : "Failed to load more reviews"
-      );
-    } finally {
-      setLoadingMore(false);
-    }
-  };
 
   if (loading) {
     return (
@@ -187,151 +127,161 @@ export default function UserProfilePage() {
   }
 
   const isLoggedIn = status === "authenticated";
+  const displayName = profile.user.name || profile.user.username || "tivi User";
+  const username = profile.user.username || "user";
+  const memberSince = new Date(profile.user.memberSince).toLocaleDateString(
+    "en-US",
+    { month: "long", year: "numeric" }
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800">
-      <div className="mx-auto max-w-5xl px-4 py-8">
-        <button
-          onClick={() => router.back()}
-          className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-white dark:bg-gray-800/70 dark:text-gray-200 dark:hover:bg-gray-800"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back
-        </button>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 pb-24 dark:from-gray-900 dark:to-gray-800">
+      <main className="mx-auto max-w-2xl px-4 py-8">
+        <div className="mb-8 text-center">
+          <div className="mb-4 flex justify-center">
+            {profile.user.image ? (
+              <Image
+                src={profile.user.image}
+                alt={displayName}
+                width={160}
+                height={160}
+                className="h-40 w-40 rounded-full object-cover"
+              />
+            ) : (
+              <div className="flex h-40 w-40 items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-5xl font-bold text-white">
+                {displayName[0]?.toUpperCase()}
+              </div>
+            )}
+          </div>
 
-        <div className="rounded-3xl bg-white p-8 shadow-xl dark:bg-gray-900">
-          <div className="flex flex-col gap-6 md:flex-row md:items-center">
-            <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500">
-              {profile.user.image ? (
-                <Image
-                  src={profile.user.image}
-                  alt={profile.user.name || "User avatar"}
-                  fill
-                  className="object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center">
-                  <User className="h-12 w-12 text-white" />
-                </div>
-              )}
+          <p className="mb-1 text-xl font-semibold text-gray-900 dark:text-white">
+            @{username}
+          </p>
+
+          <p className="mb-6 text-sm text-gray-500 dark:text-gray-400">
+            Member since {memberSince}
+          </p>
+
+          <div className="mb-6 grid grid-cols-2 gap-4">
+            <div className="transition hover:opacity-70">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {profile.stats.followers}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Followers
+              </p>
             </div>
-
-            <div className="flex-1">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {profile.user.name || "tivi User"}
-                  </h1>
-                  {profile.user.username && (
-                    <p className="text-gray-500 dark:text-gray-400">
-                      @{profile.user.username}
-                    </p>
-                  )}
-                  {profile.user.bio && (
-                    <p className="mt-4 text-gray-700 dark:text-gray-300">
-                      {profile.user.bio}
-                    </p>
-                  )}
-                </div>
-
-                {isLoggedIn && !profile.isCurrentUser && (
-                  <FollowButton
-                    userId={profile.user.id}
-                    initialFollowing={profile.isFollowing}
-                    onFollowChange={handleFollowChange}
-                  />
-                )}
-              </div>
-
-              <div className="mt-6 grid grid-cols-3 gap-4">
-                <ProfileStat
-                  label="Reviews"
-                  value={profile.stats.reviews}
-                  icon={<Star className="h-4 w-4 text-yellow-500" />}
-                />
-                <ProfileStat
-                  label="Followers"
-                  value={profile.stats.followers}
-                  icon={<Users className="h-4 w-4 text-blue-500" />}
-                />
-                <ProfileStat
-                  label="Following"
-                  value={profile.stats.following}
-                  icon={<User className="h-4 w-4 text-purple-500" />}
-                />
-              </div>
+            <div className="transition hover:opacity-70">
+              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                {profile.stats.following}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                Following
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-10">
-          <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
-            Recent Reviews
-          </h2>
-          {profile.stats.reviews > 0 && (
-            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-              Showing {profile.reviews.length} of {profile.stats.reviews} reviews
-            </p>
-          )}
-
-          {profile.reviews.length === 0 ? (
-            <div className="rounded-2xl bg-white p-10 text-center shadow dark:bg-gray-900">
-              <p className="text-gray-600 dark:text-gray-400">
-                No reviews yet
-              </p>
+        <div className="mb-8 space-y-2">
+          <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60 dark:hover:bg-gray-800">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                <Check className="h-6 w-6 text-gray-900 dark:text-white" />
+              </div>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                Watched
+              </span>
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">
+                {profile.stats.beenCount}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-2xl border border-gray-200 bg-white p-4 transition hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800/60 dark:hover:bg-gray-800">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
+                <Bookmark className="h-6 w-6 text-gray-900 dark:text-white" />
+              </div>
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                Watch List
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-gray-900 dark:text-white">
+                {profile.stats.wantToTryCount}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {profile.reviews.length > 0 && (
+          <div>
+            <h2 className="mb-4 text-xl font-bold text-gray-900 dark:text-white">
+              Recent Reviews
+            </h2>
+            <div className="space-y-4">
               {profile.reviews.map((review) => (
-                <MovieRatingCard
+                <div
                   key={review.id}
-                  movie={review.movie}
-                  rating={review.rating}
-                  createdAt={new Date(review.createdAt)}
-                />
+                  className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800/60"
+                >
+                  <div className="flex gap-4">
+                    {review.movie?.poster_path && (
+                      <Image
+                        src={`https://image.tmdb.org/t/p/w200${review.movie.poster_path}`}
+                        alt={review.movie.title}
+                        width={80}
+                        height={120}
+                        className="h-24 w-16 rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 dark:text-white">
+                        {review.movie?.title || "Unknown Movie"}
+                      </h3>
+                      <div className="mt-1 flex items-center gap-2">
+                        <div className="flex items-center">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <span
+                              key={i}
+                              className={
+                                i < Math.floor(review.rating)
+                                  ? "text-yellow-400"
+                                  : "text-gray-300"
+                              }
+                            >
+                              ★
+                            </span>
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {review.rating.toFixed(1)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(review.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-          )}
+          </div>
+        )}
 
-          {profile.pagination.hasMore && (
-            <div className="mt-6 flex flex-col items-center gap-2">
-              <button
-                onClick={handleLoadMore}
-                disabled={loadingMore}
-                className="rounded-full bg-purple-600 px-6 py-2 text-sm font-semibold text-white transition hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                {loadingMore ? "Loading more..." : "Load more reviews"}
-              </button>
-              {loadMoreError && (
-                <p className="text-sm text-red-500">{loadMoreError}</p>
-              )}
-            </div>
-          )}
-        </div>
-      </div>
-
-    </div>
-  );
-}
-
-function ProfileStat({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: number;
-  icon: ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-3 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800">
-      <div className="rounded-full bg-white p-2 dark:bg-gray-900">{icon}</div>
-      <div>
-        <p className="text-xl font-bold text-gray-900 dark:text-white">
-          {value}
-        </p>
-        <p className="text-sm text-gray-500 dark:text-gray-400">{label}</p>
-      </div>
+        {isLoggedIn && (
+          <div className="mt-8">
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="w-full rounded-full border border-red-200 bg-red-50 px-6 py-3 text-base font-medium text-red-600 transition hover:bg-red-100 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30"
+            >
+              Sign Out
+            </button>
+          </div>
+        )}
+      </main>
     </div>
   );
 }
