@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { BottomNav } from "@/components/BottomNav";
 import { TopNav } from "@/components/TopNav";
+import { UsernameOnboardingGate } from "@/components/UsernameOnboardingGate";
 
 const instrumentSans = Instrument_Sans({
   variable: "--font-instrument-sans",
@@ -33,6 +34,7 @@ export default function RootLayout({
         className={`${instrumentSans.variable} ${instrumentSerif.variable} antialiased`}
       >
         <Providers>
+          <UsernameOnboardingGate />
           <TopNav />
           {children}
           <BottomNav />
